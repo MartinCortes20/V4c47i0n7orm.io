@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Administrativo - PDFs</title>
+    <link rel="stylesheet" href="stylePdf.css">
+</head>
+<body>
+    <div class="admin-panel">
+        <header>
+            <h1>Panel Administrativo - Generar PDFs por Área</h1>
+            <p>Selecciona un área para generar el reporte en PDF</p>
+        </header>
+        
+        <div class="service-buttons">
+            <button class="service-btn" data-service="FLUJOS">
+                <span class="btn-icon"></span>
+                <span class="btn-text">Flujos</span>
+            </button>
+            <button class="service-btn" data-service="FABRICACION">
+                <span class="btn-icon"></span>
+                <span class="btn-text">Fabricación</span>
+            </button>
+            <button class="service-btn" data-service="SERVICIOS">
+                <span class="btn-icon"></span>
+                <span class="btn-text">Servicios</span>
+            </button>
+            <button class="service-btn" data-service="MECANICO ACONDICIONAMIENTO">
+                <span class="btn-icon"></span>
+                <span class="btn-text">Mecánico Acondicionamiento</span>
+            </button>
+            <button class="service-btn" data-service="ACONDICIONAMIENTO A">
+                <span class="btn-icon"></span>
+                <span class="btn-text">Acondicionamiento A</span>
+            </button>
+            <button class="service-btn" data-service="ACONDICIONAMIENTO B">
+                <span class="btn-icon"></span>
+                <span class="btn-text">Acondicionamiento B</span>
+            </button>
+            <button class="service-btn" data-service="ACONDICIONAMIENTO C">
+                <span class="btn-icon"></span>
+                <span class="btn-text">Acondicionamiento C</span>
+            </button>
+            <button class="service-btn" data-service="ACONDICIONAMIENTO D">
+                <span class="btn-icon"></span>
+                <span class="btn-text">Acondicionamiento D</span>
+            </button>
+            <button class="service-btn" data-service="MECANICO FABRICACION">
+                <span class="btn-icon"></span>
+                <span class="btn-text">Mecánico Fabricación</span>
+            </button>
+        </div>
+
+        <div class="logout-section">
+            <button class="logout-btn" id="logout-btn">
+                <span class="btn-icon"></span>
+                <span class="btn-text">Cerrar Sesión</span>
+            </button>
+        </div>
+    </div>
+
+    <script type="module" src="appPdf.js"></script>
+</body>
+</html>

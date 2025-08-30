@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formato de Vacaciones</title>
+    <link rel="stylesheet" href="styleForm.css">
+</head>
+<body>
+    <!-- Notificación flotante -->
+    <div id="notification" class="notification">
+        <button class="notification-close">&times;</button>
+        <div id="notification-message"></div>
+    </div>
+
+    <div id="main-form" class="container">
+        <!-- Bienvenida -->
+        <div style="background-color: #e6f3ff; padding: 15px; border-bottom: 2px solid #000; text-align: center;">
+            <h4>Bienvenido a este formulario para solicitar tus vacaciones</h4>
+            <p>Tu folio con el que serás asignado se te dará al terminar</p>
+            <p><strong>Llena los campos con cuidado</strong></p>
+        </div>
+        
+        <div class="service-section">
+            <span>FOLIO</span>
+            <div class="folio" id="folio-number">001</div>
+        </div>
+        
+        <div class="header">
+            <h3 id="main-title">FORMATO DE VACACIONES 3ER CUATRIMESTRE DEL 2025 OCTUBRE, NOVIEMBRE, DICIEMBRE Y ENERO 2026</h3>
+        </div>
+
+        <form id="vacations-form">
+            <!-- Selector de Área (antes servicio) al inicio -->
+            <div class="form-item" style="border: 2px solid #000; padding: 15px; margin: 10px; background-color: #f9f9f9;">
+                <label for="carpeta" style="font-size: 18px; color: #333;">ÁREA</label>
+                <select id="carpeta" required style="font-size: 18px; padding: 10px;">
+                    <option value="">Seleccione un área</option>
+                    <option value="FLUJOS">FLUJOS</option>
+                    <option value="FABRICACION">FABRICACION</option>
+                    <option value="SERVICIOS">SERVICIOS</option>
+                    <option value="MECANICO ACONDICIONAMIENTO">MECANICO ACONDICIONAMIENTO</option>
+                    <option value="ACONDICIONAMIENTO A">ACONDICIONAMIENTO A</option>
+                    <option value="ACONDICIONAMIENTO B">ACONDICIONAMIENTO B</option>
+                    <option value="ACONDICIONAMIENTO C">ACONDICIONAMIENTO C</option>
+                    <option value="ACONDICIONAMIENTO D">ACONDICIONAMIENTO D</option>
+                    <option value="MECANICO FABRICACION">MECANICO FABRICACION</option>
+                </select>
+            </div>
+
+            <div class="form-grid">
+                <div class="form-item">
+                    <label for="empleado-num">Nº DE EMPLEADO</label>
+                    <input type="number" id="empleado-num" maxlength="8" required>
+                </div>
+                
+                <div class="form-item">
+                    <label for="supervisor">SUPERVISOR</label>
+                    <select id="supervisor" required style="font-size: 18px; padding: 10px;">
+                        <option value="">Seleccione un supervisor</option>
+                    </select>
+                </div>
+                
+                <div class="form-item">
+                    <label for="departamento">DEPARTAMENTO</label>
+                    <select id="departamento" required style="font-size: 18px; padding: 10px;">
+                        <option value="">Primero seleccione el área</option>
+                    </select>
+                </div>
+                
+                <div class="form-item">
+                    <label for="fecha">FECHA</label>
+                    <input type="date" id="fecha" readonly>
+                </div>
+                
+                <div class="form-item full-width">
+                    <label for="nombre-completo">NOMBRE COMPLETO</label>
+                    <input type="text" id="nombre-completo" maxlength="200" required>
+                </div>
+            </div>
+
+            <div class="months-container">
+                <div style="text-align: center; margin-bottom: 15px; padding: 10px; background-color: #ffffcc; border: 1px solid #ccc;">
+                    <p><strong>Instrucciones:</strong> Da click en el día que quieres vacaciones, se pondrá en verde</p>
+                    <p><strong>Aviso:</strong> Los dias en Rojo son Dias festivos</p>
+                    <p><strong>Nota:</strong> SEMANA NORMAL BLOQUE 5 DIAS SEMANA 6X2 BLOQUE 6 DIAS</p>
+                </div>
+                
+                <div class="month-section">
+                    <div class="month-header">OCTUBRE</div>
+                    <div class="calendar" id="calendar-octubre"></div>
+                </div>
+                
+                <div class="month-section">
+                    <div class="month-header">NOVIEMBRE</div>
+                    <div class="calendar" id="calendar-noviembre"></div>
+                </div>
+                
+                <div class="month-section">
+                    <div class="month-header">DICIEMBRE</div>
+                    <div class="calendar" id="calendar-diciembre"></div>
+                </div>
+                
+                <div class="month-section">
+                    <div class="month-header">ENERO</div>
+                    <div class="calendar" id="calendar-enero"></div>
+                </div>
+            </div>
+
+            <div class="submit-section">
+                <button type="submit" class="submit-btn">ENVIAR SOLICITUD</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Modals -->
+    <div id="confirmation-modal" class="modal">
+        <div class="modal-content">
+            <h3>Confirmar Solicitud</h3>
+            <p>¿Estás seguro de enviar tu solicitud de vacaciones?</p>
+            <div id="selected-days"></div>
+            <div class="modal-buttons">
+                <button class="modal-btn btn-confirm" onclick="confirmSubmission()">Listo</button>
+                <button class="modal-btn btn-cancel" onclick="editSubmission()">Editar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="day-info-modal" class="modal">
+        <div class="modal-content">
+            <h3>Información del Día</h3>
+            <p id="day-info-content"></p>
+            <div class="modal-buttons">
+                <button class="modal-btn btn-confirm" onclick="closeDayInfoModal()">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="scriptForm.js"></script>
+</body>
+</html>
