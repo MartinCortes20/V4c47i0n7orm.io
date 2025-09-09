@@ -9,10 +9,25 @@
 <body>
     <div class="admin-panel">
         <header>
-            <h1>Panel Administrativo - Generar PDFs por Área</h1>
+            <h1>Panel Administrativo - Generar PDFs</h1>
             <p>Selecciona un área para generar el reporte en PDF</p>
         </header>
         
+        <h2 style="text-align: center; margin: 30px 0 20px; color: #c62828;">¿Quiénes y qué pidieron en la cena?</h2>
+        <div class="service-buttons">
+            <button class="service-btn" id="reporte-pavo" data-service="PAVO">
+                <span class="btn-icon">🦃</span>
+                <span class="btn-text">PAVO</span>
+                <span class="btn-desc">Ver quienes eligieron pavo</span>
+            </button>
+            <button class="service-btn" id="reporte-pierna" data-service="PIERNA">
+                <span class="btn-icon">🍖</span>
+                <span class="btn-text">PIERNA</span>
+                <span class="btn-desc">Ver quienes eligieron pierna</span>
+            </button>
+        </div>
+
+        <h2 style="text-align: center; margin: 40px 0 20px; color: #2c3e50;">Solicitudes de Vacaciones por Área</h2>
         <div class="service-buttons">
             <button class="service-btn" data-service="FLUJOS">
                 <span class="btn-icon"></span>
@@ -54,7 +69,6 @@
 
         <div class="logout-section">
             <button class="logout-btn" id="logout-btn">
-                <span class="btn-icon"></span>
                 <span class="btn-text">Cerrar Sesión</span>
             </button>
         </div>

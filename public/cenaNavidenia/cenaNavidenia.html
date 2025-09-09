@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elección de Cena Navideña</title>
+    <link rel="stylesheet" href="cenaNavidenia.css">
+    <!-- Firebase App (el core de Firebase SDK) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <!-- Firebase Firestore -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Elección de Cena Navideña</h1>
+            <p>Por favor, selecciona tu opción preferida para la cena navideña</p>
+        </header>
+
+        <main>
+            <form id="cenaForm">
+                <div class="form-group">
+                    <label for="nombre">Nombre completo:</label>
+                    <input type="text" id="nombre" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="numEmpleado">Número de empleado:</label>
+                    <input type="text" id="numEmpleado" required>
+                </div>
+
+                <div class="opciones-cena">
+                    <h2>Selecciona tu opción:</h2>
+                    <div class="opciones-container">
+                        <div class="opcion" id="pavo">
+                            <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzMzMyIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Ik04IDE0di44YTIgMiAwIDAgMCA0IDB2LThtLTIgMmg0bTAgMHY0YTIgMiAwIDAgMS0yIDJoLTJhMiAyIDAgMCAxLTItMnYtNGg0eiIvPjxwYXRoIGQ9Ik0xNy41IDkuNWE0LjkgNC45IDAgMCAwLTEwIDBNMTggOGExMCAxMCAwIDAgMS0xMiAwIi8+PC9zdmc+" alt="Pavo">
+                            <h3>PAVO</h3>
+                        </div>
+                        <div class="opcion" id="pierna">
+                            <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzMzMyIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Ik03LjUgNy41YzMuMDctMS40NyA2LjA2Ljk3IDcuNSA3LjUtMi40OSAwLTQuNS0yLTQuNS00LjV6Ii8+PHBhdGggZD0iTTE3LjUgNy41Yy0zLjA3LTEuNDctNi4wNi45Ny03LjUgNy41IDIuNDkgMCA0LjUtMiA0LjUtNC41eiIvPjxwYXRoIGQ9Ik0xMiAydjIwIi8+PC9zdmc+" alt="Pierna">
+                            <h3>PIERNA</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" id="enviarBtn" disabled>Enviar elección</button>
+            </form>
+
+            <div id="mensaje" class="mensaje"></div>
+        </main>
+    </div>
+
+    <script src="cenaNavidenia.js"></script>
+</body>
+</html>

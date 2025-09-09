@@ -24,14 +24,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// Días festivos por mes
-const holidaysByMonth = {
-    10: [31], // Octubre
-    11: [1, 2, 20], // Noviembre
-    12: [12, 24, 25, 26, 31], // Diciembre
-    1: [1] // Enero
-};
-
 // Verificar autenticación
 function checkAuth() {
     const isAuthenticated = sessionStorage.getItem('pdfAuth');
@@ -61,6 +53,17 @@ function formatDate(dateString) {
     if (!dateString) return '';
     
     try {
+        // Si es un timestamp de Firebase
+        if (dateString.toDate) {
+            const date = dateString.toDate();
+            return date.toLocaleDateString('es-ES', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            });
+        }
+        
+        // Si es una cadena de texto
         const date = new Date(dateString);
         return date.toLocaleDateString('es-ES', {
             day: '2-digit',
@@ -72,43 +75,148 @@ function formatDate(dateString) {
     }
 }
 
-// Función para truncar texto si es muy largo
-function truncateText(text, maxLength) {
-    if (!text || text === '-') return '-';
-    if (text.length <= maxLength) return text;
-    return text.substring(0, maxLength - 3) + '...';
-}
-
-// Obtener días festivos como string (versión mejorada)
-function getHolidaysString(month) {
-    const holidays = holidaysByMonth[month] || [];
-    if (holidays.length === 0) return '-';
-    
-    // Limitar a 3 días máximo para evitar desbordamiento
-    if (holidays.length > 3) {
-        return holidays.slice(0, 3).join(', ') + '...';
+// Función para obtener datos de cena navideña
+async function obtenerDatosCena(tipoCena) {
+    try {
+        let querySnapshot;
+        
+        if (tipoCena === 'TODOS') {
+            querySnapshot = await getDocs(collection(db, 'cenaNavidenia'));
+        } else {
+            const q = query(
+                collection(db, 'cenaNavidenia'), 
+                where('tipoCena', '==', tipoCena)
+            );
+            querySnapshot = await getDocs(q);
+        }
+        
+        const datos = [];
+        querySnapshot.forEach((doc) => {
+            datos.push({ id: doc.id, ...doc.data() });
+        });
+        
+        // Ordenar por número de empleado
+        return datos.sort((a, b) => {
+            if (a.numEmpleado && b.numEmpleado) {
+                return a.numEmpleado.localeCompare(b.numEmpleado);
+            }
+            return 0;
+        });
+    } catch (error) {
+        console.error('Error obteniendo datos de cena:', error);
+        throw new Error('No se pudieron obtener los datos de la cena');
     }
+}
+
+// Generar PDF para cena navideña
+async function generarPDFCena(tipoCena) {
+    if (!checkAuth()) return;
     
-    return holidays.join(', ');
+    try {
+        // Mostrar mensaje de carga
+        const loadingMsg = document.createElement('div');
+        loadingMsg.textContent = `Generando PDF para ${tipoCena}...`;
+        loadingMsg.style.position = 'fixed';
+        loadingMsg.style.top = '20px';
+        loadingMsg.style.left = '50%';
+        loadingMsg.style.transform = 'translateX(-50%)';
+        loadingMsg.style.background = '#4CAF50';
+        loadingMsg.style.color = 'white';
+        loadingMsg.style.padding = '10px 20px';
+        loadingMsg.style.borderRadius = '5px';
+        loadingMsg.style.zIndex = '1000';
+        document.body.appendChild(loadingMsg);
+        
+        // Obtener datos
+        const datos = await obtenerDatosCena(tipoCena);
+        
+        if (datos.length === 0) {
+            alert(`No se encontraron registros para ${tipoCena}`);
+            document.body.removeChild(loadingMsg);
+            return;
+        }
+
+        // Cargar jsPDF
+        const jsPDFLoaded = await loadJsPDF();
+        if (!jsPDFLoaded) {
+            document.body.removeChild(loadingMsg);
+            return;
+        }
+
+        // Crear PDF
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        
+        // Configuración
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const margin = 20;
+        let yPosition = 20;
+        
+        // Título
+        doc.setFontSize(18);
+        doc.setFont(undefined, 'bold');
+        doc.setTextColor(198, 40, 40); // Rojo navideño
+        doc.text(`REPORTE DE CENA NAVIDEÑA - ${tipoCena}`, pageWidth / 2, yPosition, { align: 'center' });
+        yPosition += 15;
+        
+        // Fecha de generación
+        doc.setFontSize(10);
+        doc.setFont(undefined, 'normal');
+        doc.setTextColor(100, 100, 100);
+        doc.text(`Generado el: ${new Date().toLocaleDateString('es-ES')}`, pageWidth / 2, yPosition, { align: 'center' });
+        yPosition += 15;
+        
+        // Preparar datos para la tabla
+        const tableData = datos.map((item, index) => [
+            index + 1,
+            item.numEmpleado || 'N/A',
+            item.nombre || 'N/A',
+            item.tipoCena || 'N/A',
+            '' // Espacio para firma
+        ]);
+        
+        // Crear tabla
+        doc.autoTable({
+            startY: yPosition,
+            head: [['#', 'Empleado', 'Nombre', 'Cena', 'Firma']],
+            body: tableData,
+            theme: 'grid',
+            headStyles: {
+                fillColor: [198, 40, 40], // Rojo navideño
+                textColor: 255,
+                fontStyle: 'bold'
+            },
+            alternateRowStyles: {
+                fillColor: [240, 240, 240]
+            },
+            styles: {
+                fontSize: 10,
+                cellPadding: 3,
+                overflow: 'linebreak'
+            },
+            columnStyles: {
+                0: { cellWidth: 15 }, // #
+                1: { cellWidth: 30 }, // Empleado
+                2: { cellWidth: 60 }, // Nombre
+                3: { cellWidth: 30 }, // Cena
+                4: { cellWidth: 40 }  // Firma
+            }
+        });
+        
+        // Guardar PDF
+        const fileName = `cena_navidenia_${tipoCena.toLowerCase()}_${new Date().toISOString().slice(0, 10)}.pdf`;
+        doc.save(fileName);
+        
+        // Eliminar mensaje de carga
+        document.body.removeChild(loadingMsg);
+        
+    } catch (error) {
+        console.error('Error generando PDF de cena:', error);
+        alert('Error al generar el PDF: ' + error.message);
+    }
 }
 
-// Función alternativa para ordenar si falla la consulta con orderBy
-function sortRecords(records) {
-    return records.sort((a, b) => {
-        // Intentar ordenar por folioFormulario si existe
-        if (a.folioFormulario && b.folioFormulario) {
-            return a.folioFormulario - b.folioFormulario;
-        }
-        // Si no, ordenar por número de empleado
-        if (a.numEmpleado && b.numEmpleado) {
-            return a.numEmpleado - b.numEmpleado;
-        }
-        return 0;
-    });
-}
-
-// Generar PDF con formato específico
-// Generar PDF con formato vertical (uno encima del otro)
+// Función original para generar PDF de vacaciones (mantenida)
 async function generatePDF(servicio) {
     if (!checkAuth()) return;
     
@@ -367,12 +475,21 @@ function initApp() {
         header.appendChild(userInfo);
     }
     
-    // Agregar event listeners a los botones
+    // Agregar event listeners a los botones de áreas
     document.querySelectorAll('.service-btn').forEach(button => {
         button.addEventListener('click', (e) => {
             const service = e.currentTarget.getAttribute('data-service');
             generatePDF(service);
         });
+    });
+    
+    // Agregar event listeners a los botones de cena navideña
+    document.getElementById('reporte-pavo').addEventListener('click', () => {
+        generarPDFCena('PAVO');
+    });
+    
+    document.getElementById('reporte-pierna').addEventListener('click', () => {
+        generarPDFCena('PIERNA');
     });
     
     // Agregar event listener al botón de cerrar sesión
