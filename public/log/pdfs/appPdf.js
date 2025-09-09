@@ -24,6 +24,32 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+// Función para ordenar registros por folioFormulario
+function sortRecords(records) {
+    return records.sort((a, b) => {
+        const folioA = a.folioFormulario || 0;
+        const folioB = b.folioFormulario || 0;
+        return folioA - folioB;
+    });
+}
+
+// Función para truncar texto si es muy largo
+function truncateText(text, maxLength) {
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength - 3) + '...';
+}
+
+// Función para obtener días festivos como string
+function getHolidaysString(month) {
+    const holidays = {
+        1: ['1° - Año Nuevo'],
+        10: ['12 - Día de la Raza'],
+        11: ['2 - Día de Muertos', '20 - Revolución Mexicana'],
+        12: ['12 - Día de la Virgen', '25 - Navidad']
+    };
+    return holidays[month] ? holidays[month].join(', ') : '-';
+}
+
 // Verificar autenticación
 function checkAuth() {
     const isAuthenticated = sessionStorage.getItem('pdfAuth');
@@ -74,6 +100,7 @@ function formatDate(dateString) {
         return dateString;
     }
 }
+
 
 // Función para obtener datos de cena navideña
 async function obtenerDatosCena(tipoCena) {
@@ -175,33 +202,34 @@ async function generarPDFCena(tipoCena) {
             '' // Espacio para firma
         ]);
         
-        // Crear tabla
-        doc.autoTable({
-            startY: yPosition,
-            head: [['#', 'Empleado', 'Nombre', 'Cena', 'Firma']],
-            body: tableData,
-            theme: 'grid',
-            headStyles: {
-                fillColor: [198, 40, 40], // Rojo navideño
-                textColor: 255,
-                fontStyle: 'bold'
-            },
-            alternateRowStyles: {
-                fillColor: [240, 240, 240]
-            },
-            styles: {
-                fontSize: 10,
-                cellPadding: 3,
-                overflow: 'linebreak'
-            },
-            columnStyles: {
-                0: { cellWidth: 15 }, // #
-                1: { cellWidth: 30 }, // Empleado
-                2: { cellWidth: 60 }, // Nombre
-                3: { cellWidth: 30 }, // Cena
-                4: { cellWidth: 40 }  // Firma
-            }
-        });
+
+// Máximo ancho en vertical
+doc.autoTable({
+    startY: yPosition,
+    head: [['#', 'N° Empleado', 'Nombre', 'Cena', 'Firma']],
+    body: tableData,
+    theme: 'grid',
+    headStyles: {
+        fillColor: [198, 40, 40],
+        textColor: 255,
+        fontStyle: 'bold'
+    },
+    styles: {
+        fontSize: 9,
+        cellPadding: 3,
+        overflow: 'linebreak',
+        minCellHeight: 8
+    },
+    margin: { left: 5, right: 5 },
+    tableWidth: 190, // Casi el ancho total de la página
+    columnStyles: {
+        0: { cellWidth: 15 },
+        1: { cellWidth: 35 },
+        2: { cellWidth: 65 },  // Nombre más ancho
+        3: { cellWidth: 30 },
+        4: { cellWidth: 45 }   // Firma más ancha
+    }
+});
         
         // Guardar PDF
         const fileName = `cena_navidenia_${tipoCena.toLowerCase()}_${new Date().toISOString().slice(0, 10)}.pdf`;

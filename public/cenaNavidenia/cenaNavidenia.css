@@ -32,6 +32,7 @@ header h1 {
 
 .form-group {
     margin-bottom: 20px;
+    position: relative;
 }
 
 label {
@@ -46,6 +47,17 @@ input[type="text"] {
     border: 1px solid #ddd;
     border-radius: 4px;
     font-size: 16px;
+}
+
+input[type="text"].error {
+    border-color: #ff3860;
+}
+
+.error-message {
+    color: #ff3860;
+    font-size: 14px;
+    margin-top: 5px;
+    display: none;
 }
 
 .opciones-cena {
@@ -131,6 +143,87 @@ button:disabled {
     border: 1px solid #f5c6cb;
 }
 
+.advertencia {
+    background-color: #fff3cd;
+    border: 1px solid #ffeaa7;
+    color: #856404;
+    padding: 15px;
+    border-radius: 4px;
+    margin-top: 20px;
+    text-align: center;
+    font-size: 14px;
+}
+
+.icono-advertencia {
+    margin-right: 5px;
+}
+
+/* Modal */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-contenido {
+    background-color: white;
+    padding: 30px;
+    border-radius: 15px;
+    text-align: center;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.3);
+}
+
+.modal h2 {
+    color: #c62828;
+    margin-bottom: 20px;
+}
+
+.modal p {
+    margin-bottom: 25px;
+    font-size: 18px;
+    line-height: 1.5;
+}
+
+.modal-botones {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+.modal-btn {
+    padding: 12px 25px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.modal-btn.editar {
+    background-color: #f1f1f1;
+    color: #333;
+}
+
+.modal-btn.enviar {
+    background-color: #c62828;
+    color: white;
+}
+
+.modal-btn:hover {
+    opacity: 0.9;
+    transform: scale(1.05);
+}
+
 /* Responsive */
 @media (max-width: 600px) {
     .opciones-container {
@@ -141,5 +234,9 @@ button:disabled {
     .opcion {
         width: 100%;
         max-width: 200px;
+    }
+    
+    .modal-botones {
+        flex-direction: column;
     }
 }
