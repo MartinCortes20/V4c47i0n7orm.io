@@ -183,7 +183,7 @@ async function generarPDFCena(tipoCena) {
         doc.setFontSize(18);
         doc.setFont(undefined, 'bold');
         doc.setTextColor(198, 40, 40); // Rojo navideño
-        doc.text(`REPORTE DE CENA NAVIDEÑA - ${tipoCena}`, pageWidth / 2, yPosition, { align: 'center' });
+        doc.text(`ELECCION DE OBSEQUIOS FIN DE AÑO - ${tipoCena}`, pageWidth / 2, yPosition, { align: 'center' });
         yPosition += 15;
         
         // Fecha de generación

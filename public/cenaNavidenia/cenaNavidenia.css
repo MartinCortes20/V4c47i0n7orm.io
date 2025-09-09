@@ -170,6 +170,9 @@ button:disabled {
     z-index: 1000;
     justify-content: center;
     align-items: center;
+    /* Añadido para mejor compatibilidad móvil */
+    overflow-y: auto;
+    padding: 20px;
 }
 
 .modal-contenido {
@@ -180,6 +183,11 @@ button:disabled {
     width: 90%;
     max-width: 500px;
     box-shadow: 0 5px 25px rgba(0, 0, 0, 0.3);
+    /* Añadido para centrado vertical en móviles */
+    margin: auto;
+    position: relative;
+    top: 50%;
+    transform: translateY(-50%);
 }
 
 .modal h2 {
@@ -238,5 +246,18 @@ button:disabled {
     
     .modal-botones {
         flex-direction: column;
+    }
+}
+
+/* Para dispositivos muy pequeños */
+@media (max-width: 400px) {
+    .modal-contenido {
+        padding: 20px;
+        top: 45%;
+    }
+    
+    .modal-btn {
+        padding: 10px 20px;
+        font-size: 14px;
     }
 }
