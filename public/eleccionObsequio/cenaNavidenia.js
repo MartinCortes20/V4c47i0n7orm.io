@@ -177,6 +177,10 @@ document.addEventListener('DOMContentLoaded', function() {
     
     numEmpleadoInput.addEventListener('input', function() {
         validarSoloNumeros(this);
+        // Limitar a 6 caracteres
+        if (this.value.length > 6) {
+            this.value = this.value.slice(0, 6);
+        }
         if (this.value.trim() !== '') {
             ocultarError('numEmpleado');
         }
@@ -224,6 +228,13 @@ async function verificarNumEmpleado() {
     const numEmpleado = numEmpleadoInput.value.trim();
     
     if (!numEmpleado) return;
+    
+    // Verificar que tenga exactamente 6 caracteres
+    if (numEmpleado.length !== 6) {
+        notifications.error('❌ El número de empleado debe tener exactamente 6 dígitos');
+        enviarBtn.disabled = true;
+        return;
+    }
     
     try {
         const querySnapshot = await db.collection('cenaNavidenia')
@@ -302,7 +313,7 @@ function verificarCampos() {
     const nombresValido = nombresInput.value.trim() !== '';
     const apellidoPaternoValido = apellidoPaternoInput.value.trim() !== '';
     const apellidoMaternoValido = apellidoMaternoInput.value.trim() !== '';
-    const numEmpleadoValido = numEmpleadoInput.value.trim() !== '';
+    const numEmpleadoValido = numEmpleadoInput.value.trim() !== '' && numEmpleadoInput.value.trim().length === 6;
     const opcionValida = seleccion !== null;
     
     formularioValido = nombresValido && apellidoPaternoValido && apellidoMaternoValido && 
@@ -363,6 +374,10 @@ function validarTodosLosCampos() {
     if (numEmpleadoInput.value.trim() === '') {
         mostrarError('numEmpleado', 'Por favor ingresa tu número de empleado');
         camposFaltantes.push('Número de Empleado');
+        todosValidos = false;
+    } else if (numEmpleadoInput.value.trim().length !== 6) {
+        mostrarError('numEmpleado', 'El número de empleado debe tener exactamente 6 dígitos');
+        camposFaltantes.push('Número de Empleado (6 dígitos)');
         todosValidos = false;
     }
     
