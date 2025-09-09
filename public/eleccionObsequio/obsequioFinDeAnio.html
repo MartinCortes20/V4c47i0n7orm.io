@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Elección de Obsequio Fin de Año</title>
     <link rel="stylesheet" href="cenaNavidenia.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Firebase App (el core de Firebase SDK) -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <!-- Firebase Firestore -->
@@ -20,14 +21,26 @@
         <main>
             <form id="cenaForm">
                 <div class="form-group">
-                    <label for="nombre">Nombre completo:</label>
-                    <input type="text" id="nombre" required placeholder="Ingresa tu nombre completo">
-                    <div class="error-message" id="nombreError">Por favor ingresa tu nombre completo</div>
+                    <label for="nombres">Nombre(s):</label>
+                    <input type="text" id="nombres" required placeholder="Ingresa tu(s) nombre(s)" class="solo-letras">
+                    <div class="error-message" id="nombresError">Por favor ingresa tu(s) nombre(s)</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="apellidoPaterno">Apellido Paterno:</label>
+                    <input type="text" id="apellidoPaterno" required placeholder="Ingresa tu apellido paterno" class="solo-letras">
+                    <div class="error-message" id="apellidoPaternoError">Por favor ingresa tu apellido paterno</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="apellidoMaterno">Apellido Materno:</label>
+                    <input type="text" id="apellidoMaterno" required placeholder="Ingresa tu apellido materno" class="solo-letras">
+                    <div class="error-message" id="apellidoMaternoError">Por favor ingresa tu apellido materno</div>
                 </div>
 
                 <div class="form-group">
                     <label for="numEmpleado">Número de empleado:</label>
-                    <input type="text" id="numEmpleado" required placeholder="Ingresa tu número de empleado">
+                    <input type="text" id="numEmpleado" required placeholder="Ingresa tu número de empleado" class="solo-numeros">
                     <div class="error-message" id="numEmpleadoError">Por favor ingresa tu número de empleado</div>
                 </div>
 

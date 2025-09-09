@@ -16,11 +16,14 @@ const db = firebase.firestore();
 // Variables globales
 let seleccion = null;
 let numEmpleadoExiste = false;
+let nombreCompletoExiste = false;
 let formularioValido = false;
 
 // Elementos DOM
 const form = document.getElementById('cenaForm');
-const nombreInput = document.getElementById('nombre');
+const nombresInput = document.getElementById('nombres');
+const apellidoPaternoInput = document.getElementById('apellidoPaterno');
+const apellidoMaternoInput = document.getElementById('apellidoMaterno');
 const numEmpleadoInput = document.getElementById('numEmpleado');
 const opcionPavo = document.getElementById('pavo');
 const opcionPierna = document.getElementById('pierna');
@@ -30,6 +33,107 @@ const modal = document.getElementById('modalConfirmacion');
 const confirmacionTexto = document.getElementById('confirmacionTexto');
 const btnEditar = document.getElementById('btnEditar');
 const btnEnviar = document.getElementById('btnEnviar');
+
+// Sistema de Notificaciones
+class NotificationSystem {
+    constructor() {
+        this.container = null;
+        this.notifications = [];
+        this.createContainer();
+    }
+    
+    createContainer() {
+        this.container = document.createElement('div');
+        this.container.className = 'notification-container';
+        document.body.appendChild(this.container);
+    }
+    
+    show(message, type = 'info', duration = 5000, dismissible = true) {
+        const notification = this.createNotification(message, type, dismissible);
+        this.container.appendChild(notification);
+        this.notifications.push(notification);
+        
+        // Mostrar con animación
+        setTimeout(() => {
+            notification.classList.add('show');
+        }, 100);
+        
+        // Auto-dismiss si se especifica duración
+        if (duration > 0 && dismissible) {
+            notification.classList.add('auto-dismiss');
+            setTimeout(() => {
+                this.hide(notification);
+            }, duration);
+        }
+        
+        return notification;
+    }
+    
+    createNotification(message, type, dismissible) {
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        
+        const iconMap = {
+            success: '✓',
+            error: '⚠',
+            warning: '⚠',
+            info: 'ℹ'
+        };
+        
+        notification.innerHTML = `
+            <div class="notification-icon">${iconMap[type] || 'ℹ'}</div>
+            <div class="notification-content">${message}</div>
+            ${dismissible ? '<button class="notification-close">×</button>' : ''}
+        `;
+        
+        // Evento para cerrar
+        if (dismissible) {
+            const closeBtn = notification.querySelector('.notification-close');
+            closeBtn.addEventListener('click', () => {
+                this.hide(notification);
+            });
+        }
+        
+        return notification;
+    }
+    
+    hide(notification) {
+        notification.classList.remove('show');
+        notification.classList.add('hide');
+        
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+            this.notifications = this.notifications.filter(n => n !== notification);
+        }, 400);
+    }
+    
+    hideAll() {
+        this.notifications.forEach(notification => {
+            this.hide(notification);
+        });
+    }
+    
+    error(message, duration = 0) {
+        return this.show(message, 'error', duration);
+    }
+    
+    success(message, duration = 5000) {
+        return this.show(message, 'success', duration);
+    }
+    
+    warning(message, duration = 7000) {
+        return this.show(message, 'warning', duration);
+    }
+    
+    info(message, duration = 5000) {
+        return this.show(message, 'info', duration);
+    }
+}
+
+// Inicializar sistema de notificaciones
+const notifications = new NotificationSystem();
 
 // Event Listeners
 document.addEventListener('DOMContentLoaded', function() {
@@ -41,39 +145,42 @@ document.addEventListener('DOMContentLoaded', function() {
     // Validar en tiempo real si el número de empleado ya existe
     numEmpleadoInput.addEventListener('blur', verificarNumEmpleado);
     
+    // Validar nombre completo cuando se completen todos los campos de nombre
+    nombresInput.addEventListener('blur', verificarNombreCompletoSiEstaCompleto);
+    apellidoPaternoInput.addEventListener('blur', verificarNombreCompletoSiEstaCompleto);
+    apellidoMaternoInput.addEventListener('blur', verificarNombreCompletoSiEstaCompleto);
+    
     // Validar campos en tiempo real
-    nombreInput.addEventListener('input', function() {
+    nombresInput.addEventListener('input', function() {
+        validarSoloLetras(this);
         if (this.value.trim() !== '') {
-            ocultarError('nombre');
+            ocultarError('nombres');
+        }
+        verificarCampos();
+    });
+    
+    apellidoPaternoInput.addEventListener('input', function() {
+        validarSoloLetras(this);
+        if (this.value.trim() !== '') {
+            ocultarError('apellidoPaterno');
+        }
+        verificarCampos();
+    });
+    
+    apellidoMaternoInput.addEventListener('input', function() {
+        validarSoloLetras(this);
+        if (this.value.trim() !== '') {
+            ocultarError('apellidoMaterno');
         }
         verificarCampos();
     });
     
     numEmpleadoInput.addEventListener('input', function() {
+        validarSoloNumeros(this);
         if (this.value.trim() !== '') {
             ocultarError('numEmpleado');
         }
         verificarCampos();
-    });
-    
-    // Manejar clic en botón deshabilitado
-    enviarBtn.addEventListener('click', function(e) {
-        if (this.disabled) {
-            e.preventDefault();
-            
-            // Mostrar mensajes de error según lo que falte
-            if (nombreInput.value.trim() === '') {
-                mostrarError('nombre', 'Por favor ingresa tu nombre completo');
-            }
-            
-            if (numEmpleadoInput.value.trim() === '') {
-                mostrarError('numEmpleado', 'Por favor ingresa tu número de empleado');
-            }
-            
-            if (seleccion === null) {
-                mostrarMensaje('Por favor selecciona una opción de cena', 'error');
-            }
-        }
     });
     
     // Manejar botones del modal
@@ -84,6 +191,17 @@ document.addEventListener('DOMContentLoaded', function() {
     btnEnviar.addEventListener('click', enviarFormulario);
 });
 
+// Función para validar solo letras
+function validarSoloLetras(input) {
+    input.value = input.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
+    input.value = input.value.toUpperCase();
+}
+
+// Función para validar solo números
+function validarSoloNumeros(input) {
+    input.value = input.value.replace(/\D/g, '');
+}
+
 // Función para seleccionar una opción
 function seleccionarOpcion(opcion) {
     // Remover selección anterior
@@ -93,6 +211,9 @@ function seleccionarOpcion(opcion) {
     // Marcar nueva selección
     seleccion = opcion.toUpperCase();
     document.getElementById(opcion).classList.add('seleccionada');
+    
+    // Mostrar notificación de selección
+    notifications.info(`Has seleccionado: ${seleccion}`, 3000);
     
     // Habilitar botón si todos los campos están completos
     verificarCampos();
@@ -112,25 +233,80 @@ async function verificarNumEmpleado() {
         numEmpleadoExiste = !querySnapshot.empty;
         
         if (numEmpleadoExiste) {
-            mostrarMensaje('Este número de empleado ya ha realizado su elección.', 'error');
+            notifications.error('❌ Este número de empleado ya ha realizado su elección');
             enviarBtn.disabled = true;
         } else {
-            mensajeDiv.textContent = '';
+            // Solo limpiar mensaje si no hay otros errores
+            if (mensajeDiv.classList.contains('error') && 
+                mensajeDiv.textContent.includes('número de empleado')) {
+                mensajeDiv.textContent = '';
+                mensajeDiv.className = 'mensaje';
+            }
             verificarCampos();
         }
     } catch (error) {
         console.error('Error verificando número de empleado:', error);
-        mostrarMensaje('Error al verificar el número de empleado. Intenta nuevamente.', 'error');
+        notifications.error('❌ Error al verificar el número de empleado. Intenta nuevamente');
+    }
+}
+
+// Función para verificar nombre completo solo si está completo
+async function verificarNombreCompletoSiEstaCompleto() {
+    const nombres = nombresInput.value.trim();
+    const apellidoPaterno = apellidoPaternoInput.value.trim();
+    const apellidoMaterno = apellidoMaternoInput.value.trim();
+    
+    if (nombres && apellidoPaterno && apellidoMaterno) {
+        await verificarNombreCompleto();
+    }
+}
+
+// Función para verificar si el nombre completo ya existe
+async function verificarNombreCompleto() {
+    const nombres = nombresInput.value.trim().toUpperCase();
+    const apellidoPaterno = apellidoPaternoInput.value.trim().toUpperCase();
+    const apellidoMaterno = apellidoMaternoInput.value.trim().toUpperCase();
+    const nombreCompleto = `${nombres} ${apellidoPaterno} ${apellidoMaterno}`;
+    
+    if (!nombres || !apellidoPaterno || !apellidoMaterno) return false;
+    
+    try {
+        const querySnapshot = await db.collection('cenaNavidenia')
+            .where('nombre', '==', nombreCompleto)
+            .get();
+            
+        nombreCompletoExiste = !querySnapshot.empty;
+        
+        if (nombreCompletoExiste) {
+            notifications.error('❌ Este nombre completo ya ha realizado su elección');
+            enviarBtn.disabled = true;
+        } else {
+            // Solo limpiar mensaje si no hay otros errores
+            if (mensajeDiv.classList.contains('error') && 
+                mensajeDiv.textContent.includes('nombre completo')) {
+                mensajeDiv.textContent = '';
+                mensajeDiv.className = 'mensaje';
+            }
+            verificarCampos();
+        }
+        return nombreCompletoExiste;
+    } catch (error) {
+        console.error('Error verificando nombre completo:', error);
+        notifications.error('❌ Error al verificar el nombre completo. Intenta nuevamente');
+        return true; // Asumir que existe para prevenir envío
     }
 }
 
 // Función para verificar si todos los campos están completos
 function verificarCampos() {
-    const nombreValido = nombreInput.value.trim() !== '';
+    const nombresValido = nombresInput.value.trim() !== '';
+    const apellidoPaternoValido = apellidoPaternoInput.value.trim() !== '';
+    const apellidoMaternoValido = apellidoMaternoInput.value.trim() !== '';
     const numEmpleadoValido = numEmpleadoInput.value.trim() !== '';
     const opcionValida = seleccion !== null;
     
-    formularioValido = nombreValido && numEmpleadoValido && opcionValida && !numEmpleadoExiste;
+    formularioValido = nombresValido && apellidoPaternoValido && apellidoMaternoValido && 
+                      numEmpleadoValido && opcionValida && !numEmpleadoExiste && !nombreCompletoExiste;
     enviarBtn.disabled = !formularioValido;
     
     return formularioValido;
@@ -139,76 +315,175 @@ function verificarCampos() {
 // Mostrar u ocultar mensajes de error
 function mostrarError(elemento, mensaje) {
     const errorDiv = document.getElementById(elemento + 'Error');
-    errorDiv.textContent = mensaje;
-    errorDiv.style.display = 'block';
-    document.getElementById(elemento).classList.add('error');
+    if (errorDiv) {
+        errorDiv.textContent = mensaje;
+        errorDiv.style.display = 'block';
+        document.getElementById(elemento).classList.add('error');
+    }
 }
 
 function ocultarError(elemento) {
-    document.getElementById(elemento + 'Error').style.display = 'none';
-    document.getElementById(elemento).classList.remove('error');
+    const errorDiv = document.getElementById(elemento + 'Error');
+    if (errorDiv) {
+        errorDiv.style.display = 'none';
+        document.getElementById(elemento).classList.remove('error');
+    }
 }
 
-// Función para manejar el envío del formulario
-function manejarEnvioFormulario(e) {
-    e.preventDefault();
+// Función para validar todos los campos y mostrar errores específicos
+function validarTodosLosCampos() {
+    let todosValidos = true;
+    let camposFaltantes = [];
     
-    // Validar campos
-    let camposValidos = true;
+    // Limpiar errores previos
+    ocultarError('nombres');
+    ocultarError('apellidoPaterno');
+    ocultarError('apellidoMaterno');
+    ocultarError('numEmpleado');
     
-    if (nombreInput.value.trim() === '') {
-        mostrarError('nombre', 'Por favor ingresa tu nombre completo');
-        camposValidos = false;
+    // Validar cada campo
+    if (nombresInput.value.trim() === '') {
+        mostrarError('nombres', 'Por favor ingresa tu(s) nombre(s)');
+        camposFaltantes.push('Nombre(s)');
+        todosValidos = false;
+    }
+    
+    if (apellidoPaternoInput.value.trim() === '') {
+        mostrarError('apellidoPaterno', 'Por favor ingresa tu apellido paterno');
+        camposFaltantes.push('Apellido Paterno');
+        todosValidos = false;
+    }
+    
+    if (apellidoMaternoInput.value.trim() === '') {
+        mostrarError('apellidoMaterno', 'Por favor ingresa tu apellido materno');
+        camposFaltantes.push('Apellido Materno');
+        todosValidos = false;
     }
     
     if (numEmpleadoInput.value.trim() === '') {
         mostrarError('numEmpleado', 'Por favor ingresa tu número de empleado');
-        camposValidos = false;
+        camposFaltantes.push('Número de Empleado');
+        todosValidos = false;
     }
     
     if (seleccion === null) {
-        mostrarMensaje('Por favor selecciona una opción de cena', 'error');
-        camposValidos = false;
+        camposFaltantes.push('Selección de Obsequio');
+        todosValidos = false;
     }
     
-    if (!camposValidos || numEmpleadoExiste) {
+    // Mostrar notificación con campos faltantes
+    if (camposFaltantes.length > 0) {
+        const mensaje = camposFaltantes.length === 1 
+            ? `⚠️ Falta completar: ${camposFaltantes[0]}`
+            : `⚠️ Faltan completar los siguientes campos:\n• ${camposFaltantes.join('\n• ')}`;
+        
+        notifications.error(mensaje);
+    }
+    
+    return todosValidos;
+}
+
+// Función para manejar el envío del formulario
+async function manejarEnvioFormulario(e) {
+    e.preventDefault();
+    
+    // Validar todos los campos y mostrar errores específicos
+    const camposValidos = validarTodosLosCampos();
+    
+    if (!camposValidos) {
         return;
     }
     
-    // Mostrar modal de confirmación
-    const nombre = nombreInput.value.trim().toUpperCase();
-    const tipoCena = seleccion.toUpperCase();
-    confirmacionTexto.innerHTML = `¿Estás seguro <strong>${nombre}</strong>?<br>Elegiste <strong>${tipoCena}</strong>`;
+    // Verificar duplicados antes de mostrar el modal
+    if (numEmpleadoExiste) {
+        notifications.error('❌ Este número de empleado ya ha realizado su elección');
+        return;
+    }
+    
+    // Verificar nombre completo antes del modal
+    const nombreDuplicado = await verificarNombreCompleto();
+    if (nombreDuplicado) {
+        return;
+    }
+    
+    // Si llegamos aquí, todo está válido, mostrar modal de confirmación
+    const nombres = nombresInput.value.trim().toUpperCase();
+    const apellidoPaterno = apellidoPaternoInput.value.trim().toUpperCase();
+    const apellidoMaterno = apellidoMaternoInput.value.trim().toUpperCase();
+    const nombreCompleto = `${nombres} ${apellidoPaterno} ${apellidoMaterno}`;
+    const tipoObsequio = seleccion.toUpperCase();
+    
+    confirmacionTexto.innerHTML = `¿Estás seguro <strong>${nombreCompleto}</strong>?<br>Elegiste <strong>${tipoObsequio}</strong>`;
     modal.style.display = 'flex';
 }
 
 // Función para enviar el formulario
 async function enviarFormulario() {
     // Obtener y limpiar datos
-    const nombre = nombreInput.value.trim().toUpperCase();
+    const nombres = nombresInput.value.trim().toUpperCase();
+    const apellidoPaterno = apellidoPaternoInput.value.trim().toUpperCase();
+    const apellidoMaterno = apellidoMaternoInput.value.trim().toUpperCase();
+    const nombreCompleto = `${nombres} ${apellidoPaterno} ${apellidoMaterno}`;
     const numEmpleado = numEmpleadoInput.value.trim();
     
     // Cerrar modal
     modal.style.display = 'none';
+    
+    // Mostrar notificación de proceso
+    notifications.info('⏳ Procesando tu elección...', 0);
     
     // Deshabilitar botón durante el envío
     enviarBtn.disabled = true;
     enviarBtn.textContent = 'Enviando...';
     
     try {
+        // Verificar una vez más antes de guardar (por seguridad)
+        const querySnapshot = await db.collection('cenaNavidenia')
+            .where('numEmpleado', '==', numEmpleado)
+            .get();
+            
+        if (!querySnapshot.empty) {
+            notifications.hideAll();
+            notifications.error('❌ Este número de empleado ya ha realizado su elección');
+            enviarBtn.disabled = false;
+            enviarBtn.textContent = 'Enviar elección';
+            return;
+        }
+        
+        const querySnapshot2 = await db.collection('cenaNavidenia')
+            .where('nombre', '==', nombreCompleto)
+            .get();
+            
+        if (!querySnapshot2.empty) {
+            notifications.hideAll();
+            notifications.error('❌ Este nombre completo ya ha realizado su elección');
+            enviarBtn.disabled = false;
+            enviarBtn.textContent = 'Enviar elección';
+            return;
+        }
+        
         // Guardar en Firebase
         await db.collection('cenaNavidenia').add({
-            nombre: nombre,
+            nombre: nombreCompleto,
+            nombres: nombres,
+            apellido1: apellidoPaterno,
+            apellido2: apellidoMaterno,
             numEmpleado: numEmpleado,
             tipoCena: seleccion,
             fecha: new Date()
         });
         
-        // Mostrar mensaje de éxito
-        mostrarMensaje(`¡Gracias ${nombre}! Tu elección de ${seleccion} ha sido registrada.`, 'exito');
+        // Limpiar notificaciones anteriores y mostrar éxito
+        notifications.hideAll();
+        notifications.success(` ¡Gracias ${nombres}! Tu elección de ${seleccion} ha sido registrada exitosamente`, 8000);
+        
+        // Mostrar mensaje de éxito también en el área del formulario
+        mostrarMensaje(`¡Gracias ${nombres}! Tu elección de ${seleccion} ha sido registrada.`, 'exito');
         
         // Deshabilitar el formulario después del envío
-        nombreInput.disabled = true;
+        nombresInput.disabled = true;
+        apellidoPaternoInput.disabled = true;
+        apellidoMaternoInput.disabled = true;
         numEmpleadoInput.disabled = true;
         opcionPavo.style.pointerEvents = 'none';
         opcionPierna.style.pointerEvents = 'none';
@@ -218,6 +493,8 @@ async function enviarFormulario() {
         
     } catch (error) {
         console.error('Error al guardar en Firebase:', error);
+        notifications.hideAll();
+        notifications.error('❌ Error al registrar tu elección. Por favor intenta nuevamente');
         mostrarMensaje('Error al registrar tu elección. Intenta nuevamente.', 'error');
         enviarBtn.disabled = false;
     } finally {
@@ -225,7 +502,7 @@ async function enviarFormulario() {
     }
 }
 
-// Función para mostrar mensajes
+// Función para mostrar mensajes (mantenida para compatibilidad)
 function mostrarMensaje(mensaje, tipo) {
     mensajeDiv.textContent = mensaje;
     mensajeDiv.className = 'mensaje';
@@ -236,9 +513,11 @@ function mostrarMensaje(mensaje, tipo) {
         mensajeDiv.classList.add('error');
     }
     
-    // Ocultar mensaje después de 5 segundos
-    setTimeout(() => {
-        mensajeDiv.textContent = '';
-        mensajeDiv.className = 'mensaje';
-    }, 5000);
+    // Ocultar mensaje después de 5 segundos solo si es de éxito
+    if (tipo === 'exito') {
+        setTimeout(() => {
+            mensajeDiv.textContent = '';
+            mensajeDiv.className = 'mensaje';
+        }, 5000);
+    }
 }
