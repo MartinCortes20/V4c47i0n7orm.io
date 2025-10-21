@@ -4,7 +4,133 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel Administrativo - PDFs</title>
-    <link rel="stylesheet" href="stylePdf.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .admin-panel {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        h2 {
+            text-align: center;
+            margin: 30px 0 20px;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .service-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            padding: 0 20px 30px;
+        }
+
+        .service-btn {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            width: 220px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .service-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            border-color: #3498db;
+        }
+
+        .btn-icon {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .btn-text {
+            font-weight: 600;
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+            color: #2c3e50;
+        }
+
+        .btn-desc {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+        }
+
+        .logout-section {
+            padding: 30px;
+            text-align: center;
+            border-top: 1px solid #ecf0f1;
+        }
+
+        .logout-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 30px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: #c0392b;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .service-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .service-btn {
+                width: 100%;
+                max-width: 300px;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="admin-panel">
@@ -12,8 +138,17 @@
             <h1>Panel Administrativo - Generar PDFs</h1>
             <p>Selecciona un área para generar el reporte en PDF</p>
         </header>
+
+        <h2 style="color: #2980b9;">Lista de Asistentes - Fiesta Fin de Año</h2>
+        <div class="service-buttons">
+            <button class="service-btn" id="reporte-fiesta" data-service="FIESTA_FIN_ANIO">
+                <span class="btn-icon">🎉</span>
+                <span class="btn-text">FIESTA FIN DE AÑO</span>
+                <span class="btn-desc">Lista completa de asistentes</span>
+            </button>
+        </div>
         
-        <h2 style="text-align: center; margin: 30px 0 20px; color: #c62828;">¿Quiénes y qué pidieron en la cena?</h2>
+        <h2 style="color: #c62828;">¿Quiénes y qué pidieron en la cena?</h2>
         <div class="service-buttons">
             <button class="service-btn" id="reporte-pavo" data-service="PAVO">
                 <span class="btn-icon">🦃</span>
@@ -30,39 +165,39 @@
         <h2 style="text-align: center; margin: 40px 0 20px; color: #2c3e50;">Solicitudes de Vacaciones por Área</h2>
         <div class="service-buttons">
             <button class="service-btn" data-service="FLUJOS">
-                <span class="btn-icon"></span>
+                <span class="btn-icon">📊</span>
                 <span class="btn-text">Flujos</span>
             </button>
             <button class="service-btn" data-service="FABRICACION">
-                <span class="btn-icon"></span>
+                <span class="btn-icon">🏭</span>
                 <span class="btn-text">Fabricación</span>
             </button>
             <button class="service-btn" data-service="SERVICIOS">
-                <span class="btn-icon"></span>
+                <span class="btn-icon">🔧</span>
                 <span class="btn-text">Servicios</span>
             </button>
             <button class="service-btn" data-service="MECANICO ACONDICIONAMIENTO">
-                <span class="btn-icon"></span>
+                <span class="btn-icon">🔩</span>
                 <span class="btn-text">Mecánico Acondicionamiento</span>
             </button>
             <button class="service-btn" data-service="ACONDICIONAMIENTO A">
-                <span class="btn-icon"></span>
+                <span class="btn-icon">🏗️</span>
                 <span class="btn-text">Acondicionamiento A</span>
             </button>
             <button class="service-btn" data-service="ACONDICIONAMIENTO B">
-                <span class="btn-icon"></span>
+                <span class="btn-icon">🏗️</span>
                 <span class="btn-text">Acondicionamiento B</span>
             </button>
             <button class="service-btn" data-service="ACONDICIONAMIENTO C">
-                <span class="btn-icon"></span>
+                <span class="btn-icon">🏗️</span>
                 <span class="btn-text">Acondicionamiento C</span>
             </button>
             <button class="service-btn" data-service="ACONDICIONAMIENTO D">
-                <span class="btn-icon"></span>
+                <span class="btn-icon">🏗️</span>
                 <span class="btn-text">Acondicionamiento D</span>
             </button>
             <button class="service-btn" data-service="MECANICO FABRICACION">
-                <span class="btn-icon"></span>
+                <span class="btn-icon">🔧</span>
                 <span class="btn-text">Mecánico Fabricación</span>
             </button>
         </div>

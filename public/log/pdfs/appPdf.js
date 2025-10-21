@@ -50,17 +50,6 @@ function getHolidaysString(month) {
     return holidays[month] ? holidays[month].join(', ') : '-';
 }
 
-// Verificar autenticación
-function checkAuth() {
-    const isAuthenticated = sessionStorage.getItem('pdfAuth');
-    
-    if (!isAuthenticated) {
-        window.location.href = '../index.html';
-        return false;
-    }
-    return true;
-}
-
 // Cargar jsPDF dinámicamente
 async function loadJsPDF() {
     try {
@@ -101,7 +90,6 @@ function formatDate(dateString) {
     }
 }
 
-
 // Función para obtener datos de cena navideña
 async function obtenerDatosCena(tipoCena) {
     try {
@@ -137,8 +125,6 @@ async function obtenerDatosCena(tipoCena) {
 
 // Generar PDF para cena navideña
 async function generarPDFCena(tipoCena) {
-    if (!checkAuth()) return;
-    
     try {
         // Mostrar mensaje de carga
         const loadingMsg = document.createElement('div');
@@ -201,35 +187,34 @@ async function generarPDFCena(tipoCena) {
             item.tipoCena || 'N/A',
             '' // Espacio para firma
         ]);
-        
 
-// Máximo ancho en vertical
-doc.autoTable({
-    startY: yPosition,
-    head: [['#', 'N° Empleado', 'Nombre', 'Cena', 'Firma']],
-    body: tableData,
-    theme: 'grid',
-    headStyles: {
-        fillColor: [198, 40, 40],
-        textColor: 255,
-        fontStyle: 'bold'
-    },
-    styles: {
-        fontSize: 9,
-        cellPadding: 3,
-        overflow: 'linebreak',
-        minCellHeight: 8
-    },
-    margin: { left: 5, right: 5 },
-    tableWidth: 190, // Casi el ancho total de la página
-    columnStyles: {
-        0: { cellWidth: 15 },
-        1: { cellWidth: 35 },
-        2: { cellWidth: 65 },  // Nombre más ancho
-        3: { cellWidth: 30 },
-        4: { cellWidth: 45 }   // Firma más ancha
-    }
-});
+        // Máximo ancho en vertical
+        doc.autoTable({
+            startY: yPosition,
+            head: [['#', 'N° Empleado', 'Nombre', 'Cena', 'Firma']],
+            body: tableData,
+            theme: 'grid',
+            headStyles: {
+                fillColor: [198, 40, 40],
+                textColor: 255,
+                fontStyle: 'bold'
+            },
+            styles: {
+                fontSize: 9,
+                cellPadding: 3,
+                overflow: 'linebreak',
+                minCellHeight: 8
+            },
+            margin: { left: 5, right: 5 },
+            tableWidth: 190, // Casi el ancho total de la página
+            columnStyles: {
+                0: { cellWidth: 15 },
+                1: { cellWidth: 35 },
+                2: { cellWidth: 65 },  // Nombre más ancho
+                3: { cellWidth: 30 },
+                4: { cellWidth: 45 }   // Firma más ancha
+            }
+        });
         
         // Guardar PDF
         const fileName = `cena_navidenia_${tipoCena.toLowerCase()}_${new Date().toISOString().slice(0, 10)}.pdf`;
@@ -244,10 +229,12 @@ doc.autoTable({
     }
 }
 
-// Función original para generar PDF de vacaciones (mantenida)
+
+
+
+
+// Función para generar PDF de vacaciones
 async function generatePDF(servicio) {
-    if (!checkAuth()) return;
-    
     try {
         // Mostrar mensaje de carga
         const loadingMsg = document.createElement('div');
@@ -478,46 +465,184 @@ async function generatePDF(servicio) {
     }
 }
 
+// Función para obtener datos de fiesta fin de año
+async function obtenerDatosFiestaFinAnio() {
+    try {
+        const querySnapshot = await getDocs(collection(db, 'fiestaFinAnio'));
+        
+        const datos = [];
+        querySnapshot.forEach((doc) => {
+            datos.push({ id: doc.id, ...doc.data() });
+        });
+        
+        // Ordenar por número de empleado
+        return datos.sort((a, b) => {
+            if (a.numEmpleado && b.numEmpleado) {
+                return a.numEmpleado.localeCompare(b.numEmpleado);
+            }
+            return 0;
+        });
+    } catch (error) {
+        console.error('Error obteniendo datos de fiesta fin de año:', error);
+        throw new Error('No se pudieron obtener los datos de la fiesta');
+    }
+}
+
+// Generar PDF para fiesta fin de año
+async function generarPDFFiestaFinAnio() {
+    try {
+        // Mostrar mensaje de carga
+        const loadingMsg = document.createElement('div');
+        loadingMsg.textContent = 'Generando lista de asistentes a Fiesta Fin de Año...';
+        loadingMsg.style.position = 'fixed';
+        loadingMsg.style.top = '20px';
+        loadingMsg.style.left = '50%';
+        loadingMsg.style.transform = 'translateX(-50%)';
+        loadingMsg.style.background = '#3498db';
+        loadingMsg.style.color = 'white';
+        loadingMsg.style.padding = '10px 20px';
+        loadingMsg.style.borderRadius = '5px';
+        loadingMsg.style.zIndex = '1000';
+        document.body.appendChild(loadingMsg);
+        
+        // Obtener datos
+        const datos = await obtenerDatosFiestaFinAnio();
+        
+        if (datos.length === 0) {
+            alert('No se encontraron registros para la Fiesta de Fin de Año');
+            document.body.removeChild(loadingMsg);
+            return;
+        }
+
+        // Cargar jsPDF
+        const jsPDFLoaded = await loadJsPDF();
+        if (!jsPDFLoaded) {
+            document.body.removeChild(loadingMsg);
+            return;
+        }
+
+        // Crear PDF
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        
+        // Configuración
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const margin = 20;
+        let yPosition = 20;
+        
+        // Título principal
+        doc.setFontSize(18);
+        doc.setFont(undefined, 'bold');
+        doc.setTextColor(41, 128, 185); // Azul corporativo
+        doc.text('LISTA DE ASISTENTES - FIESTA FIN DE AÑO', pageWidth / 2, yPosition, { align: 'center' });
+        yPosition += 10;
+        
+        // Subtítulo
+        doc.setFontSize(14);
+        doc.setTextColor(52, 73, 94);
+        doc.text('Confirmación de Asistencia', pageWidth / 2, yPosition, { align: 'center' });
+        yPosition += 10;
+        
+        // Fecha de generación
+        doc.setFontSize(10);
+        doc.setFont(undefined, 'normal');
+        doc.setTextColor(100, 100, 100);
+        doc.text(`Generado el: ${new Date().toLocaleDateString('es-ES', { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+        })}`, pageWidth / 2, yPosition, { align: 'center' });
+        yPosition += 15;
+        
+        // Estadísticas
+        doc.setFontSize(10);
+        doc.setTextColor(52, 73, 94);
+        doc.text(`Total de asistentes confirmados: ${datos.length}`, margin, yPosition);
+        yPosition += 8;
+        
+        // Preparar datos para la tabla
+        const tableData = datos.map((item, index) => [
+            index + 1,
+            item.numEmpleado || 'N/A',
+            item.nombre || `${item.apellidoPaterno || ''} ${item.apellidoMaterno || ''}`.trim(),
+            '' // Espacio para firma
+        ]);
+
+        // Crear tabla
+        doc.autoTable({
+            startY: yPosition,
+            head: [['#', 'N° Empleado', 'Nombre Completo', 'Firma']],
+            body: tableData,
+            theme: 'grid',
+            headStyles: {
+                fillColor: [41, 128, 185],
+                textColor: 255,
+                fontStyle: 'bold'
+            },
+            styles: {
+                fontSize: 9,
+                cellPadding: 4,
+                overflow: 'linebreak',
+                minCellHeight: 10
+            },
+            margin: { left: 10, right: 10 },
+            tableWidth: 190,
+            columnStyles: {
+                0: { cellWidth: 15, halign: 'center' },
+                1: { cellWidth: 35, halign: 'center' },
+                2: { cellWidth: 95 },  // Nombre completo más ancho
+                4: { cellWidth: 45 }   // Firma
+            },
+            didDrawPage: function(data) {
+                // Agregar número de página
+                doc.setFontSize(8);
+                doc.setTextColor(100, 100, 100);
+                doc.text(
+                    `Página ${data.pageNumber}`, 
+                    data.settings.margin.left, 
+                    doc.internal.pageSize.height - 10
+                );
+            }
+        });
+        
+        // Guardar PDF
+        const fileName = `lista_asistentes_fiesta_fin_anio_${new Date().toISOString().slice(0, 10)}.pdf`;
+        doc.save(fileName);
+        
+        // Eliminar mensaje de carga
+        document.body.removeChild(loadingMsg);
+        
+    } catch (error) {
+        console.error('Error generando PDF de fiesta fin de año:', error);
+        alert('Error al generar el PDF: ' + error.message);
+    }
+}
+
+
+
 // Cerrar sesión
 function logout() {
-    if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
-        sessionStorage.removeItem('pdfAuth');
-        sessionStorage.removeItem('user');
+    if (confirm('¿Estás seguro de que quieres salir?')) {
+        // Redirigir a la página principal
         window.location.href = '../index.html';
     }
 }
 
 // Inicializar la aplicación
 function initApp() {
-    if (!checkAuth()) return;
-    
-    // Mostrar información del usuario
-    const user = sessionStorage.getItem('user');
-    if (user) {
-        const header = document.querySelector('header');
-        const userInfo = document.createElement('p');
-        userInfo.textContent = `Conectado como: ${user}`;
-        userInfo.style.fontSize = '14px';
-        userInfo.style.color = '#7f8c8d';
-        userInfo.style.marginTop = '5px';
-        header.appendChild(userInfo);
-    }
-    
     // Agregar event listeners a los botones de áreas
     document.querySelectorAll('.service-btn').forEach(button => {
         button.addEventListener('click', (e) => {
             const service = e.currentTarget.getAttribute('data-service');
-            generatePDF(service);
+            if (service === 'PAVO' || service === 'PIERNA') {
+                generarPDFCena(service);
+            } else if (service === 'FIESTA_FIN_ANIO') {
+                generarPDFFiestaFinAnio();
+            } else {
+                generatePDF(service);
+            }
         });
-    });
-    
-    // Agregar event listeners a los botones de cena navideña
-    document.getElementById('reporte-pavo').addEventListener('click', () => {
-        generarPDFCena('PAVO');
-    });
-    
-    document.getElementById('reporte-pierna').addEventListener('click', () => {
-        generarPDFCena('PIERNA');
     });
     
     // Agregar event listener al botón de cerrar sesión
