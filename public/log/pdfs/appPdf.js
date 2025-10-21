@@ -563,16 +563,18 @@ async function generarPDFFiestaFinAnio() {
         
         // Preparar datos para la tabla
         const tableData = datos.map((item, index) => [
-            index + 1,
-            item.numEmpleado || 'N/A',
-            item.nombre || `${item.apellidoPaterno || ''} ${item.apellidoMaterno || ''}`.trim(),
-            '' // Espacio para firma
-        ]);
+                index + 1,
+                item.numEmpleado || 'N/A',
+                item.nombre || `${item.apellidoPaterno || ''} ${item.apellidoMaterno || ''}`.trim(),
+                item.misaVirgen || 'NO',
+                item.fiestaFin || 'NO',
+                '' // Espacio para firma
+            ]);
 
         // Crear tabla
         doc.autoTable({
             startY: yPosition,
-            head: [['#', 'N° Empleado', 'Nombre Completo', 'Firma']],
+           head: [['#', 'N° Empleado', 'Nombre Completo', 'Misa Virgen', 'Fiesta Fin Año', 'Firma']],
             body: tableData,
             theme: 'grid',
             headStyles: {
@@ -589,11 +591,13 @@ async function generarPDFFiestaFinAnio() {
             margin: { left: 10, right: 10 },
             tableWidth: 190,
             columnStyles: {
-                0: { cellWidth: 15, halign: 'center' },
-                1: { cellWidth: 35, halign: 'center' },
-                2: { cellWidth: 95 },  // Nombre completo más ancho
-                4: { cellWidth: 45 }   // Firma
-            },
+                    0: { cellWidth: 15, halign: 'center' },
+                    1: { cellWidth: 30, halign: 'center' },
+                    2: { cellWidth: 70 },  // Nombre completo
+                    3: { cellWidth: 25, halign: 'center' }, // Misa Virgen
+                    4: { cellWidth: 25, halign: 'center' }, // Fiesta Fin Año
+                    5: { cellWidth: 25 }   // Firma
+                },
             didDrawPage: function(data) {
                 // Agregar número de página
                 doc.setFontSize(8);

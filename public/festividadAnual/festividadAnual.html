@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registro Fiesta Fin de Año</title>
+    <title>Registro 12 de Diciembre - Misa y Fiesta</title>
     <link rel="stylesheet" href="festividadAnual.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Firebase App (el core de Firebase SDK) -->
@@ -14,8 +14,8 @@
 <body>
     <div class="container">
         <header>
-            <h1>Registro Fiesta Fin de Año</h1>
-            <p>Confirma tu asistencia a nuestra celebración especial</p>
+            <h1>¡Te esperamos en nuestra Fiesta de Fin de Año!<br>12 de Diciembre 2025</h1>
+            <p>Confirma tu asistencia a la Misa de la Virgen y Fiesta de Fin de Año</p>
         </header>
 
         <main>
@@ -44,7 +44,38 @@
                     <div class="error-message" id="numEmpleadoError">Por favor ingresa tu número de empleado</div>
                 </div>
 
-                <button type="submit" id="enviarBtn" disabled>Confirmar asistencia</button>
+                <!-- Opciones de Misa y Fiesta -->
+                <div class="opciones-container">
+                    <div class="opcion-grupo">
+                        <h3>Misa a la Virgen</h3>
+                        <div class="opciones-botones">
+                            <button type="button" class="opcion-btn" data-tipo="misaVirgen" data-valor="SI">
+                                <span class="btn-icon">🙏</span>
+                                <span class="btn-text">SI</span>
+                            </button>
+                            <button type="button" class="opcion-btn" data-tipo="misaVirgen" data-valor="NO">
+                                <span class="btn-icon">❌</span>
+                                <span class="btn-text">NO</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="opcion-grupo">
+                        <h3>Fiesta Fin de Año</h3>
+                        <div class="opciones-botones">
+                            <button type="button" class="opcion-btn" data-tipo="fiestaFin" data-valor="SI">
+                                <span class="btn-icon">🎉</span>
+                                <span class="btn-text">SI</span>
+                            </button>
+                            <button type="button" class="opcion-btn" data-tipo="fiestaFin" data-valor="NO">
+                                <span class="btn-icon">❌</span>
+                                <span class="btn-text">NO</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" id="enviarBtn" disabled>Confirmar asistencias</button>
             </form>
 
             <div id="mensaje" class="mensaje"></div>
@@ -58,8 +89,8 @@
     <!-- Modal de confirmación -->
     <div class="modal" id="modalConfirmacion">
         <div class="modal-contenido">
-            <h2>Confirmar asistencia</h2>
-            <p id="confirmacionTexto">¿Estás seguro o segura de confirmar tu asistencia?</p>
+            <h2>Confirmar asistencias</h2>
+            <p id="confirmacionTexto">¿Estás seguro o segura de confirmar tus asistencias?</p>
             <div class="modal-botones">
                 <button class="modal-btn editar" id="btnEditar">Editar</button>
                 <button class="modal-btn enviar" id="btnEnviar">Confirmar</button>

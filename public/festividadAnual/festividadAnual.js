@@ -17,6 +17,10 @@ const db = firebase.firestore();
 let numEmpleadoExiste = false;
 let nombreCompletoExiste = false;
 let formularioValido = false;
+let selecciones = {
+    misaVirgen: null,
+    fiestaFin: null
+};
 
 // Elementos DOM
 const form = document.getElementById('fiestaForm');
@@ -181,6 +185,15 @@ document.addEventListener('DOMContentLoaded', function() {
         verificarCampos();
     });
     
+    // Manejar botones de opciones SI/NO
+    document.querySelectorAll('.opcion-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const tipo = this.getAttribute('data-tipo');
+            const valor = this.getAttribute('data-valor');
+            seleccionarOpcion(tipo, valor, this);
+        });
+    });
+    
     // Manejar botones del modal
     btnEditar.addEventListener('click', function() {
         modal.style.display = 'none';
@@ -188,6 +201,25 @@ document.addEventListener('DOMContentLoaded', function() {
     
     btnEnviar.addEventListener('click', enviarFormulario);
 });
+
+// Función para seleccionar opciones SI/NO
+function seleccionarOpcion(tipo, valor, boton) {
+    // Remover selección anterior del mismo tipo
+    document.querySelectorAll(`.opcion-btn[data-tipo="${tipo}"]`).forEach(btn => {
+        btn.classList.remove('seleccionada');
+    });
+    
+    // Marcar nueva selección
+    boton.classList.add('seleccionada');
+    selecciones[tipo] = valor;
+    
+    // Mostrar notificación de selección
+    const nombreEvento = tipo === 'misaVirgen' ? 'Misa a la Virgen' : 'Fiesta Fin de Año';
+    notifications.info(`${nombreEvento}: ${valor}`, 2000);
+    
+    // Habilitar botón si todos los campos están completos
+    verificarCampos();
+}
 
 // Función para validar solo letras
 function validarSoloLetras(input) {
@@ -208,7 +240,7 @@ async function verificarNumEmpleado() {
     
     // Verificar que tenga exactamente 6 caracteres
     if (numEmpleado.length !== 6) {
-        notifications.error(' El número de empleado debe tener exactamente 6 dígitos');
+        notifications.error('❌ El número de empleado debe tener exactamente 6 dígitos');
         enviarBtn.disabled = true;
         return;
     }
@@ -221,20 +253,14 @@ async function verificarNumEmpleado() {
         numEmpleadoExiste = !querySnapshot.empty;
         
         if (numEmpleadoExiste) {
-            notifications.error(' Este número de empleado ya ha confirmado su asistencia');
+            notifications.error('❌ Este número de empleado ya ha confirmado su asistencia');
             enviarBtn.disabled = true;
         } else {
-            // Solo limpiar mensaje si no hay otros errores
-            if (mensajeDiv.classList.contains('error') && 
-                mensajeDiv.textContent.includes('número de empleado')) {
-                mensajeDiv.textContent = '';
-                mensajeDiv.className = 'mensaje';
-            }
             verificarCampos();
         }
     } catch (error) {
         console.error('Error verificando número de empleado:', error);
-        notifications.error(' Error al verificar el número de empleado. Intenta nuevamente');
+        notifications.error('❌ Error al verificar el número de empleado. Intenta nuevamente');
     }
 }
 
@@ -266,21 +292,15 @@ async function verificarNombreCompleto() {
         nombreCompletoExiste = !querySnapshot.empty;
         
         if (nombreCompletoExiste) {
-            notifications.error('Este nombre completo ya ha confirmado su asistencia');
+            notifications.error('❌ Este nombre completo ya ha confirmado su asistencia');
             enviarBtn.disabled = true;
         } else {
-            // Solo limpiar mensaje si no hay otros errores
-            if (mensajeDiv.classList.contains('error') && 
-                mensajeDiv.textContent.includes('nombre completo')) {
-                mensajeDiv.textContent = '';
-                mensajeDiv.className = 'mensaje';
-            }
             verificarCampos();
         }
         return nombreCompletoExiste;
     } catch (error) {
         console.error('Error verificando nombre completo:', error);
-        notifications.error('Error al verificar el nombre completo. Intenta nuevamente');
+        notifications.error('❌ Error al verificar el nombre completo. Intenta nuevamente');
         return true; // Asumir que existe para prevenir envío
     }
 }
@@ -291,9 +311,10 @@ function verificarCampos() {
     const apellidoPaternoValido = apellidoPaternoInput.value.trim() !== '';
     const apellidoMaternoValido = apellidoMaternoInput.value.trim() !== '';
     const numEmpleadoValido = numEmpleadoInput.value.trim() !== '' && numEmpleadoInput.value.trim().length === 6;
+    const opcionesValidas = selecciones.misaVirgen !== null && selecciones.fiestaFin !== null;
     
     formularioValido = nombreValido && apellidoPaternoValido && apellidoMaternoValido && 
-                      numEmpleadoValido && !numEmpleadoExiste && !nombreCompletoExiste;
+                      numEmpleadoValido && opcionesValidas && !numEmpleadoExiste && !nombreCompletoExiste;
     enviarBtn.disabled = !formularioValido;
     
     return formularioValido;
@@ -357,6 +378,17 @@ function validarTodosLosCampos() {
         todosValidos = false;
     }
     
+    // Validar opciones
+    if (selecciones.misaVirgen === null) {
+        camposFaltantes.push('Misa a la Virgen');
+        todosValidos = false;
+    }
+    
+    if (selecciones.fiestaFin === null) {
+        camposFaltantes.push('Fiesta Fin de Año');
+        todosValidos = false;
+    }
+    
     // Mostrar notificación con campos faltantes
     if (camposFaltantes.length > 0) {
         const mensaje = camposFaltantes.length === 1 
@@ -382,7 +414,7 @@ async function manejarEnvioFormulario(e) {
     
     // Verificar duplicados antes de mostrar el modal
     if (numEmpleadoExiste) {
-        notifications.error(' Este número de empleado ya ha confirmado su asistencia');
+        notifications.error('❌ Este número de empleado ya ha confirmado su asistencia');
         return;
     }
     
@@ -398,7 +430,15 @@ async function manejarEnvioFormulario(e) {
     const apellidoMaterno = apellidoMaternoInput.value.trim().toUpperCase();
     const nombreCompleto = `${nombre} ${apellidoPaterno} ${apellidoMaterno}`;
     
-    confirmacionTexto.innerHTML = `¿<strong>${nombreCompleto}</strong> Estás segura o seguro? <br>Estás a punto de confirmar tu asistencia a la Fiesta de Fin de Año`;
+    const resumenMisa = selecciones.misaVirgen === 'SI' ? '✅ SI' : '❌ NO';
+    const resumenFiesta = selecciones.fiestaFin === 'SI' ? '✅ SI' : '❌ NO';
+    
+    confirmacionTexto.innerHTML = `
+        <strong>${nombreCompleto}</strong><br><br>
+        ¿Estás segura o seguro de confirmar tus asistencias?<br><br>
+        <strong>Misa a la Virgen:</strong> ${resumenMisa}<br>
+        <strong>Fiesta Fin de Año:</strong> ${resumenFiesta}
+    `;
     modal.style.display = 'flex';
 }
 
@@ -415,7 +455,7 @@ async function enviarFormulario() {
     modal.style.display = 'none';
     
     // Mostrar notificación de proceso
-    notifications.info('Procesando tu confirmación...', 0);
+    notifications.info('⏳ Procesando tu confirmación...', 0);
     
     // Deshabilitar botón durante el envío
     enviarBtn.disabled = true;
@@ -429,9 +469,9 @@ async function enviarFormulario() {
             
         if (!querySnapshot.empty) {
             notifications.hideAll();
-            notifications.error(' Este número de empleado ya ha confirmado su asistencia');
+            notifications.error('❌ Este número de empleado ya ha confirmado su asistencia');
             enviarBtn.disabled = false;
-            enviarBtn.textContent = 'Confirmar asistencia';
+            enviarBtn.textContent = 'Confirmar asistencias';
             return;
         }
         
@@ -441,43 +481,58 @@ async function enviarFormulario() {
             
         if (!querySnapshot2.empty) {
             notifications.hideAll();
-            notifications.error(' Este nombre completo ya ha confirmado su asistencia');
+            notifications.error('❌ Este nombre completo ya ha confirmado su asistencia');
             enviarBtn.disabled = false;
-            enviarBtn.textContent = 'Confirmar asistencia';
+            enviarBtn.textContent = 'Confirmar asistencias';
             return;
         }
         
-        // Guardar en Firebase
+        // Guardar en Firebase con las nuevas opciones
         await db.collection('fiestaFinAnio').add({
             nombre: nombreCompleto,
             apellidoPaterno: apellidoPaterno,
             apellidoMaterno: apellidoMaterno,
             numEmpleado: numEmpleado,
+            misaVirgen: selecciones.misaVirgen,
+            fiestaFin: selecciones.fiestaFin,
             fecha: new Date()
         });
         
         // Limpiar notificaciones anteriores y mostrar éxito
         notifications.hideAll();
-        notifications.success(` ¡Gracias ${nombre}! Tu asistencia ha sido confirmada exitosamente`, 8000);
+        
+        let mensajeExito = `¡Gracias ${nombre}! Tus asistencias han sido confirmadas:`;
+        if (selecciones.misaVirgen === 'SI') mensajeExito += '\n✅ Misa a la Virgen';
+        if (selecciones.fiestaFin === 'SI') mensajeExito += '\n✅ Fiesta Fin de Año';
+        
+        notifications.success(mensajeExito, 8000);
         
         // Mostrar mensaje de éxito también en el área del formulario
-        mostrarMensaje(`¡Gracias ${nombre}! Tu asistencia ha sido confirmada exitosamente.`, 'exito');
+        mostrarMensaje(`¡Gracias ${nombre}! Tus asistencias han sido confirmadas exitosamente.`, 'exito');
         
         // Deshabilitar el formulario después del envío
         nombreInput.disabled = true;
         apellidoPaternoInput.disabled = true;
         apellidoMaternoInput.disabled = true;
         numEmpleadoInput.disabled = true;
+        
+        // Deshabilitar botones de opciones
+        document.querySelectorAll('.opcion-btn').forEach(btn => {
+            btn.disabled = true;
+            btn.style.opacity = '0.6';
+            btn.style.cursor = 'not-allowed';
+        });
+        
         enviarBtn.disabled = true;
         
     } catch (error) {
         console.error('Error al guardar en Firebase:', error);
         notifications.hideAll();
-        notifications.error(' Error al confirmar tu asistencia. Por favor intenta nuevamente');
-        mostrarMensaje('Error al confirmar tu asistencia. Intenta nuevamente.', 'error');
+        notifications.error('❌ Error al confirmar tus asistencias. Por favor intenta nuevamente');
+        mostrarMensaje('Error al confirmar tus asistencias. Intenta nuevamente.', 'error');
         enviarBtn.disabled = false;
     } finally {
-        enviarBtn.textContent = 'Confirmar asistencia';
+        enviarBtn.textContent = 'Confirmar asistencias';
     }
 }
 
