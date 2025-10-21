@@ -621,16 +621,43 @@ async function generarPDFFiestaFinAnio() {
 
 
 
-// Cerrar sesión
+// Verificar autenticación
+function verificarAutenticacion() {
+    const estaAutenticado = sessionStorage.getItem('pdfAuth') === 'true';
+    const usuario = sessionStorage.getItem('user');
+    
+    if (!estaAutenticado || !usuario) {
+        // Redirigir a la página de login
+        window.location.href = '../index.html';
+        return false;
+    }
+    
+    return true;
+}
+
+// Función para cerrar sesión
 function logout() {
     if (confirm('¿Estás seguro de que quieres salir?')) {
-        // Redirigir a la página principal
+        // Limpiar sessionStorage
+        sessionStorage.removeItem('pdfAuth');
+        sessionStorage.removeItem('user');
+        
+        // Redirigir a la página principal de login
         window.location.href = '../index.html';
     }
 }
 
 // Inicializar la aplicación
 function initApp() {
+    // Verificar autenticación primero
+    if (!verificarAutenticacion()) {
+        return;
+    }
+    
+    // Mostrar información del usuario logeado
+    const usuario = sessionStorage.getItem('user');
+    console.log(`Usuario autenticado: ${usuario}`);
+    
     // Agregar event listeners a los botones de áreas
     document.querySelectorAll('.service-btn').forEach(button => {
         button.addEventListener('click', (e) => {
