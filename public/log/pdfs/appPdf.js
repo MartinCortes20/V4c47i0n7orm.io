@@ -489,11 +489,12 @@ async function obtenerDatosFiestaFinAnio() {
 }
 
 // Generar PDF para fiesta fin de año
+// Generar PDF para fiesta fin de año
 async function generarPDFFiestaFinAnio() {
     try {
         // Mostrar mensaje de carga
         const loadingMsg = document.createElement('div');
-        loadingMsg.textContent = 'Generando lista de asistentes a Fiesta Fin de Año...';
+        loadingMsg.textContent = 'Generando lista de asistentes a Celebración Anual...';
         loadingMsg.style.position = 'fixed';
         loadingMsg.style.top = '20px';
         loadingMsg.style.left = '50%';
@@ -509,7 +510,7 @@ async function generarPDFFiestaFinAnio() {
         const datos = await obtenerDatosFiestaFinAnio();
         
         if (datos.length === 0) {
-            alert('No se encontraron registros para la Fiesta de Fin de Año');
+            alert('No se encontraron registros para la Celebración Anual');
             document.body.removeChild(loadingMsg);
             return;
         }
@@ -534,7 +535,7 @@ async function generarPDFFiestaFinAnio() {
         doc.setFontSize(18);
         doc.setFont(undefined, 'bold');
         doc.setTextColor(41, 128, 185); // Azul corporativo
-        doc.text('LISTA DE ASISTENTES - FIESTA FIN DE AÑO', pageWidth / 2, yPosition, { align: 'center' });
+        doc.text('LISTA DE ASISTENTES - CELEBRACIÓN A LA VIRGEN', pageWidth / 2, yPosition, { align: 'center' });
         yPosition += 10;
         
         // Subtítulo
@@ -563,18 +564,16 @@ async function generarPDFFiestaFinAnio() {
         
         // Preparar datos para la tabla
         const tableData = datos.map((item, index) => [
-                index + 1,
-                item.numEmpleado || 'N/A',
-                item.nombre || `${item.apellidoPaterno || ''} ${item.apellidoMaterno || ''}`.trim(),
-                item.misaVirgen || 'NO',
-                item.fiestaFin || 'NO',
-                '' // Espacio para firma
-            ]);
+            index + 1,
+            item.numEmpleado || 'N/A',
+            item.nombre || `${item.apellidoPaterno || ''} ${item.apellidoMaterno || ''}`.trim(),
+            '' // Espacio para firma
+        ]);
 
         // Crear tabla
         doc.autoTable({
             startY: yPosition,
-           head: [['#', 'N° Empleado', 'Nombre Completo', 'Misa Virgen', 'Fiesta Fin Año', 'Firma']],
+            head: [['#', 'N° Empleado', 'Nombre Completo', 'Firma']],
             body: tableData,
             theme: 'grid',
             headStyles: {
@@ -583,21 +582,19 @@ async function generarPDFFiestaFinAnio() {
                 fontStyle: 'bold'
             },
             styles: {
-                fontSize: 9,
-                cellPadding: 4,
+                fontSize: 10,
+                cellPadding: 5,
                 overflow: 'linebreak',
                 minCellHeight: 10
             },
             margin: { left: 10, right: 10 },
             tableWidth: 190,
             columnStyles: {
-                    0: { cellWidth: 15, halign: 'center' },
-                    1: { cellWidth: 30, halign: 'center' },
-                    2: { cellWidth: 70 },  // Nombre completo
-                    3: { cellWidth: 25, halign: 'center' }, // Misa Virgen
-                    4: { cellWidth: 25, halign: 'center' }, // Fiesta Fin Año
-                    5: { cellWidth: 25 }   // Firma
-                },
+                0: { cellWidth: 15, halign: 'center' },
+                1: { cellWidth: 35, halign: 'center' },
+                2: { cellWidth: 100 },  // Nombre completo más ancho
+                3: { cellWidth: 40 }    // Firma
+            },
             didDrawPage: function(data) {
                 // Agregar número de página
                 doc.setFontSize(8);
@@ -611,14 +608,14 @@ async function generarPDFFiestaFinAnio() {
         });
         
         // Guardar PDF
-        const fileName = `lista_asistentes_fiesta_fin_anio_${new Date().toISOString().slice(0, 10)}.pdf`;
+        const fileName = `lista_asistentes_celebracion_anual_${new Date().toISOString().slice(0, 10)}.pdf`;
         doc.save(fileName);
         
         // Eliminar mensaje de carga
         document.body.removeChild(loadingMsg);
         
     } catch (error) {
-        console.error('Error generando PDF de fiesta fin de año:', error);
+        console.error('Error generando PDF de celebración anual:', error);
         alert('Error al generar el PDF: ' + error.message);
     }
 }
