@@ -171,9 +171,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     numEmpleadoInput.addEventListener('input', function() {
         validarSoloNumeros(this);
-        // Limitar a 6 caracteres
-        if (this.value.length > 6) {
-            this.value = this.value.slice(0, 6);
+        // Limitar a 8 caracteres
+        if (this.value.length > 8) {
+            this.value = this.value.slice(0, 8);
         }
         if (this.value.trim() !== '') {
             ocultarError('numEmpleado');
