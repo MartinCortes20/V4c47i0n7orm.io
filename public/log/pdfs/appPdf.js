@@ -41,13 +41,13 @@ function truncateText(text, maxLength) {
 
 // Función para obtener días festivos como string
 function getHolidaysString(month) {
-    const holidays = {
-        1: ['1° - Año Nuevo'],
-        10: ['12 - Día de la Raza'],
-        11: ['2 - Día de Muertos', '20 - Revolución Mexicana'],
-        12: ['12 - Día de la Virgen', '25 - Navidad']
+    const holidays2026 = {
+        2: ['2 - Día de la Candelaria'],           // Febrero
+        3: ['16 - Natalicio de Benito Juárez'],    // Marzo
+        4: ['2 - Jueves Santo', '3 - Viernes Santo'], // Abril
+        5: ['1 - Día del Trabajo', '10 - Día de la Madre'] // Mayo
     };
-    return holidays[month] ? holidays[month].join(', ') : '-';
+    return holidays2026[month] ? holidays2026[month].join(', ') : '-';
 }
 
 // Cargar jsPDF dinámicamente
@@ -68,25 +68,35 @@ function formatDate(dateString) {
     if (!dateString) return '';
     
     try {
+        let date;
+        
         // Si es un timestamp de Firebase
         if (dateString.toDate) {
-            const date = dateString.toDate();
-            return date.toLocaleDateString('es-ES', {
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric'
-            });
+            date = dateString.toDate();
+        } 
+        // Si es una cadena ISO
+        else if (typeof dateString === 'string') {
+            date = new Date(dateString);
+        }
+        // Si ya es un objeto Date
+        else if (dateString instanceof Date) {
+            date = dateString;
+        }
+        // Otro caso
+        else {
+            return dateString;
         }
         
-        // Si es una cadena de texto
-        const date = new Date(dateString);
-        return date.toLocaleDateString('es-ES', {
+        // Convertir a hora local de México (UTC-6 o UTC-5 según horario de verano)
+        return date.toLocaleDateString('es-MX', {
+            timeZone: 'America/Mexico_City',
             day: '2-digit',
             month: '2-digit',
             year: 'numeric'
         });
     } catch (error) {
-        return dateString;
+        console.error('Error formateando fecha:', error, dateString);
+        return 'Fecha inválida';
     }
 }
 
@@ -235,7 +245,7 @@ async function generarPDFCena(tipoCena) {
 
 // Función para generar PDF de vacaciones
 async function generatePDF(servicio) {
-    try {
+       try {
         // Mostrar mensaje de carga
         const loadingMsg = document.createElement('div');
         loadingMsg.textContent = `Generando PDF para ${servicio}...`;
@@ -316,8 +326,10 @@ async function generatePDF(servicio) {
         doc.setFontSize(16);
         doc.setFont(undefined, 'bold');
         doc.setTextColor(40, 40, 40);
-        doc.text('SOLICITUD DE VACACIONES 3er CUATRIMESTRE', pageWidth / 2, yPosition, { align: 'center' });
-        yPosition += 10;
+        doc.text('SOLICITUD DE VACACIONES 1er CUATRIMESTRE 2026', pageWidth / 2, yPosition, { align: 'center' });
+        doc.setFontSize(14);
+        doc.text('FEBRERO, MARZO, ABRIL, MAYO', pageWidth / 2, yPosition + 7, { align: 'center' });
+        yPosition += 20;
         
         // Línea decorativa
         doc.setDrawColor(150, 150, 150);
@@ -426,11 +438,11 @@ async function generatePDF(servicio) {
                 yPosition += 8;
             };
 
-            // Filas de la tabla
-            addTableRow('OCTUBRE', record.diasMes1?.join(', ') || '-', getHolidaysString(10));
-            addTableRow('NOVIEMBRE', record.diasMes2?.join(', ') || '-', getHolidaysString(11));
-            addTableRow('DICIEMBRE', record.diasMes3?.join(', ') || '-', getHolidaysString(12));
-            addTableRow('ENERO', record.diasMes4?.join(', ') || '-', getHolidaysString(1));
+            // Filas de la tabla para el 1er cuatrimestre 2026
+            addTableRow('FEBRERO', record.diasMes1?.join(', ') || '-', '2 - Día de la Candelaria');
+            addTableRow('MARZO', record.diasMes2?.join(', ') || '-', '16 - Natalicio de Benito Juárez');
+            addTableRow('ABRIL', record.diasMes3?.join(', ') || '-', '2-3 - Jueves y Viernes Santo');
+            addTableRow('MAYO', record.diasMes4?.join(', ') || '-', '1 - Día del Trabajo, 10 - Día de la Madre');
 
             // Borde de la tabla
             doc.setDrawColor(0, 0, 0);
