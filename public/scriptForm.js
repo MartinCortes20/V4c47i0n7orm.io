@@ -17,10 +17,10 @@ const db = getFirestore(app);
 
 // Global variables
 let selectedDays = {
-    octubre: [],
-    noviembre: [],
-    diciembre: [],
-    enero: []
+    febrero: [],
+    marzo: [],
+    abril: [],
+    mayo: []
 };
 
 let currentFolio = 1;
@@ -28,13 +28,11 @@ let currentCarpeta = '';
 
 // Holidays configuration
 const holidays = {
-    2025: {
-        10: [31], // Halloween
-        11: [1, 2, 20], // Día de muertos, Revolución
-        12: [12, 24, 25, 26, 31], // Guadalupe, Navidad
-    },
     2026: {
-        1: [1] // Año nuevo
+        2: [2],    // 2 de febrero
+        3: [16],   // 16 de marzo
+        4: [2, 3], // 2 y 3 de abril (Semana Santa)
+        5: [1, 10] // 1 y 10 de mayo
     }
 };
 
@@ -96,11 +94,11 @@ async function initializePage() {
     // Set current date
     document.getElementById('fecha').value = new Date().toISOString().split('T')[0];
     
-    // Generate calendars
-    generateCalendar('octubre', 2025, 9); // October (month 9 in JS)
-    generateCalendar('noviembre', 2025, 10); // November (month 10 in JS)
-    generateCalendar('diciembre', 2025, 11); // December (month 11 in JS)
-    generateCalendar('enero', 2026, 0); // January (month 0 in JS)
+    // Generate calendars for 2026
+    generateCalendar('febrero', 2026, 1);  // February (month 1 in JS)
+    generateCalendar('marzo', 2026, 2);    // March (month 2 in JS)
+    generateCalendar('abril', 2026, 3);    // April (month 3 in JS)
+    generateCalendar('mayo', 2026, 4);     // May (month 4 in JS)
 
     // Check URL for admin access
     if (window.location.pathname.includes('/log')) {
@@ -297,6 +295,7 @@ async function selectDay(month, day, element) {
     }
 }
 
+
 async function getSelectedDateCount(carpeta, departamento, month, day) {
     try {
         const q = query(
@@ -324,10 +323,10 @@ async function getSelectedDateCount(carpeta, departamento, month, day) {
 
 function getMonthNumber(month) {
     const months = {
-        'octubre': 1,
-        'noviembre': 2,
-        'diciembre': 3,
-        'enero': 4
+        'febrero': 1,
+        'marzo': 2,
+        'abril': 3,
+        'mayo': 4
     };
     return months[month] || 1;
 }
@@ -365,8 +364,8 @@ async function showConfirmationModal() {
     }
 
     // Validar que se hayan seleccionado días
-    const totalDays = [...selectedDays.octubre, ...selectedDays.noviembre, 
-                      ...selectedDays.diciembre, ...selectedDays.enero].length;
+    const totalDays = [...selectedDays.febrero, ...selectedDays.marzo, 
+                      ...selectedDays.abril, ...selectedDays.mayo].length;
     
     if (totalDays === 0) {
         showNotification('Por favor selecciona al menos un día de vacaciones', 'error');
@@ -406,10 +405,10 @@ async function confirmSubmission() {
             nombreCompleto: document.getElementById('nombre-completo').value.toUpperCase(),
             supervisor: document.getElementById('supervisor').value,
             fechaEnvio: new Date().toISOString(),
-            diasMes1: selectedDays.octubre,
-            diasMes2: selectedDays.noviembre,
-            diasMes3: selectedDays.diciembre,
-            diasMes4: selectedDays.enero,
+            diasMes1: selectedDays.febrero,
+            diasMes2: selectedDays.marzo,
+            diasMes3: selectedDays.abril,
+            diasMes4: selectedDays.mayo,
             carpeta: document.getElementById('carpeta').value
         };
 
@@ -420,13 +419,13 @@ async function confirmSubmission() {
         
         // Reset form
         document.getElementById('vacations-form').reset();
-        selectedDays = { octubre: [], noviembre: [], diciembre: [], enero: [] };
+        selectedDays = { febrero: [], marzo: [], abril: [], mayo: [] };
         
         // Reload calendars
-        generateCalendar('octubre', 2025, 9);
-        generateCalendar('noviembre', 2025, 10);
-        generateCalendar('diciembre', 2025, 11);
-        generateCalendar('enero', 2026, 0);
+        generateCalendar('febrero', 2026, 1);
+        generateCalendar('marzo', 2026, 2);
+        generateCalendar('abril', 2026, 3);
+        generateCalendar('mayo', 2026, 4);
         
         // Recargar el siguiente folio para la misma carpeta
         loadNextFolioForCarpeta(currentCarpeta);
@@ -434,7 +433,6 @@ async function confirmSubmission() {
     } catch (error) {
         console.error('Error submitting form:', error);
         
-        // Intentar con un método alternativo si falla la inserción
         try {
             // Primero verificamos si el folio ya existe para esta carpeta
             const verificationQuery = query(
