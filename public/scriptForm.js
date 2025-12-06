@@ -91,14 +91,32 @@ function setupNotificationClose() {
 }
 
 async function initializePage() {
-    // Set current date
-    document.getElementById('fecha').value = new Date().toISOString().split('T')[0];
+    // Set current date in UTC
+    const now = new Date();
+    const utcDate = new Date(Date.UTC(
+        now.getUTCFullYear(),
+        now.getUTCMonth(),
+        now.getUTCDate()
+    ));
+    
+    // Formatear la fecha para mostrar
+    const formattedDate = utcDate.toISOString().split('T')[0];
+    
+    // Mostrar en pantalla
+    document.getElementById('fecha-display').textContent = formattedDate;
+    document.getElementById('fecha-display').style.padding = '5px';
+    document.getElementById('fecha-display').style.backgroundColor = '#f0f0f0';
+    document.getElementById('fecha-display').style.border = '1px solid #ccc';
+    document.getElementById('fecha-display').style.borderRadius = '3px';
+    
+    // Guardar en campo oculto para el envío
+    document.getElementById('fecha').value = formattedDate;
     
     // Generate calendars for 2026
-    generateCalendar('febrero', 2026, 1);  // February (month 1 in JS)
-    generateCalendar('marzo', 2026, 2);    // March (month 2 in JS)
-    generateCalendar('abril', 2026, 3);    // April (month 3 in JS)
-    generateCalendar('mayo', 2026, 4);     // May (month 4 in JS)
+    generateCalendar('febrero', 2026, 1);
+    generateCalendar('marzo', 2026, 2);
+    generateCalendar('abril', 2026, 3);
+    generateCalendar('mayo', 2026, 4);
 
     // Check URL for admin access
     if (window.location.pathname.includes('/log')) {
@@ -398,13 +416,24 @@ async function checkExistingSubmission(empleadoNum) {
 
 async function confirmSubmission() {
     try {
+            // Obtener fecha UTC actual
+        const now = new Date();
+        const utcDate = new Date(Date.UTC(
+            now.getUTCFullYear(),
+            now.getUTCMonth(),
+            now.getUTCDate(),
+            now.getUTCHours(),
+            now.getUTCMinutes(),
+            now.getUTCSeconds()
+        ));
+        
         const formData = {
             folioFormulario: currentFolio,
             numEmpleado: parseInt(document.getElementById('empleado-num').value),
             depto: document.getElementById('departamento').value,
             nombreCompleto: document.getElementById('nombre-completo').value.toUpperCase(),
             supervisor: document.getElementById('supervisor').value,
-            fechaEnvio: new Date().toISOString(),
+            fechaEnvio: utcDate.toISOString(), // Esto asegura UTC
             diasMes1: selectedDays.febrero,
             diasMes2: selectedDays.marzo,
             diasMes3: selectedDays.abril,

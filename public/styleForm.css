@@ -302,3 +302,13 @@ body {
         grid-template-columns: 1fr;
     }
 }
+
+.date-display {
+    padding: 5px;
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    min-height: 30px;
+    display: flex;
+    align-items: center;
+}
