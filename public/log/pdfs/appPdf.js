@@ -396,7 +396,7 @@ async function generatePDF(servicio) {
             const tableTop = yPosition;
             const tableWidth = pageWidth - margin * 2;
             const col1Width = 30; // MES
-            const col2Width = 70; // DÍAS
+            const col2Width = 90; // DÍAS (aumentado para mostrar todos los días)
             const col3Width = tableWidth - col1Width - col2Width; // FESTIVOS
             
             // Encabezados de tabla
@@ -427,9 +427,9 @@ async function generatePDF(servicio) {
                 // Mes (centrado)
                 doc.text(mes, margin + col1Width / 2, yPosition + 4, { align: 'center' });
                 
-                // Días solicitados (centrado)
+                // Días solicitados (sin truncar para mostrar todos los días)
                 const diasText = diasSolicitados || '-';
-                doc.text(truncateText(diasText, 20), margin + col1Width + col2Width / 2, yPosition + 4, { align: 'center' });
+                doc.text(diasText, margin + col1Width + col2Width / 2, yPosition + 4, { align: 'center' });
                 
                 // Días festivos (centrado)
                 const festivosText = diasFestivos || '-';
