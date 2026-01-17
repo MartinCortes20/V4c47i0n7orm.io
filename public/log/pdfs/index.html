@@ -4,133 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel Administrativo - PDFs</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        body {
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .admin-panel {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-        }
-
-        header {
-            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
-            color: white;
-            padding: 30px 20px;
-            text-align: center;
-        }
-
-        header h1 {
-            font-size: 2.2rem;
-            margin-bottom: 10px;
-        }
-
-        header p {
-            font-size: 1.1rem;
-            opacity: 0.9;
-        }
-
-        h2 {
-            text-align: center;
-            margin: 30px 0 20px;
-            color: #2c3e50;
-            font-weight: 600;
-        }
-
-        .service-buttons {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 20px;
-            padding: 0 20px 30px;
-        }
-
-        .service-btn {
-            background: white;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            padding: 20px;
-            width: 220px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-        }
-
-        .service-btn:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-            border-color: #3498db;
-        }
-
-        .btn-icon {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-        }
-
-        .btn-text {
-            font-weight: 600;
-            font-size: 1.2rem;
-            margin-bottom: 5px;
-            color: #2c3e50;
-        }
-
-        .btn-desc {
-            font-size: 0.9rem;
-            color: #7f8c8d;
-        }
-
-        .logout-section {
-            padding: 30px;
-            text-align: center;
-            border-top: 1px solid #ecf0f1;
-        }
-
-        .logout-btn {
-            background: #e74c3c;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            padding: 12px 30px;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-
-        .logout-btn:hover {
-            background: #c0392b;
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .service-buttons {
-                flex-direction: column;
-                align-items: center;
-            }
-            
-            .service-btn {
-                width: 100%;
-                max-width: 300px;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="stylePdf.css">
 </head>
 <body>
     <div class="admin-panel">
@@ -202,9 +76,18 @@
             </button>
         </div>
 
+        <h2 style="text-align: center; margin: 40px 0 20px; color: #2c3e50;">Sistema de Gestión de Afiliados</h2>
+        <div class="service-buttons">
+            <button class="service-btn" onclick="window.location.href='../afiliados/index.html'">
+                <span class="btn-icon">👥</span>
+                <span class="btn-text">Gestión de Afiliados</span>
+                <span class="btn-desc">Administrar altas, bajas y reingresos</span>
+            </button>
+        </div>
+
         <div class="logout-section">
             <button class="logout-btn" id="logout-btn">
-                <span class="btn-text">Cerrar Sesión</span>
+                Cerrar Sesión
             </button>
         </div>
     </div>

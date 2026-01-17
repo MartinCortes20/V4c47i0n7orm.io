@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solicitud de Afiliación - Sindicato</title>
+    <link rel="stylesheet" href="afiliacion.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo-section">
+                <h1>SINDICATO NACIONAL DE TRABAJADORES</h1>
+                <h2>DE LA INDUSTRIA QUÍMICA, PETROQUÍMICA, CARBOQUÍMICA, ENERGÍA Y GASES</h2>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div class="form-header">
+                <h3>C. ISAAC MAYA PÉREZ</h3>
+                <p class="cargo">SECRETARIO GENERAL DEL SINDICATO NACIONAL DE TRABAJADORES DE LA INDUSTRIA QUÍMICA, PETROQUÍMICA, CARBOQUÍMICA, ENERGÍA Y GASES.</p>
+                <p class="presente"><strong>PRESENTE:</strong></p>
+            </div>
+
+            <form id="formAfiliacion" class="afiliacion-form">
+                <div class="declaracion">
+                    <p>Manifiesto mi voluntad y solicito a usted, ser aceptado(a) como afiliado(a) al sindicato que representa, comprometiéndome a acatar y respetar los estatutos que rigen a la organización de los cuales tengo conocimientos a través de la información proporcionada por compañeros que se encuentran afiliados a este Sindicato al que me dirijo, reconociendo como Central Obrera a la <strong>Confederación de Trabajadores de México</strong>, misma a la que pertenece este Sindicato.</p>
+                </div>
+
+                <div class="section">
+                    <h3>DATOS DE LA EMPRESA</h3>
+                    
+                    <div class="form-row">
+                        <label>Actualmente presto mis servicios en la empresa:</label>
+                        <input type="text" value="COSBEL S.A. de C.V." readonly>
+                    </div>
+
+                    <div class="form-row">
+                        <label>La cual se dedica a:</label>
+                        <input type="text" value="Cosméticos y Productos de Belleza" readonly>
+                    </div>
+
+                    <div class="form-row">
+                        <label>Puesto: <span class="required">*</span></label>
+                        <select id="puesto" name="puesto" required>
+                            <option value="">Seleccione un puesto...</option>
+                            <option value="Ayudante General B">Ayudante General B</option>
+                            <option value="Ayudante General A">Ayudante General A</option>
+                            <option value="Fabricante B">Fabricante B</option>
+                            <option value="Fabricante A">Fabricante A</option>
+                            <option value="Mecánico / Utilities">Mecánico / Utilities</option>
+                            <option value="Operador">Operador</option>
+                            <option value="Porteador">Porteador</option>
+                        </select>
+                    </div>
+
+                    <div class="form-row two-cols">
+                        <div>
+                            <label>Salario diario: <span class="required">*</span></label>
+                            <input type="number" id="salarioDiario" name="salarioDiario" step="0.01" min="0" required>
+                        </div>
+                        <div>
+                            <label>Fecha de ingreso a la empresa: <span class="required">*</span></label>
+                            <input type="date" id="fechaIngresoEmpresa" name="fechaIngresoEmpresa" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h3>DATOS GENERALES</h3>
+
+                    <div class="form-row">
+                        <label>Nombre completo: <span class="required">*</span></label>
+                        <input type="text" id="nombreCompleto" name="nombreCompleto" placeholder="Nombre(s) Apellido Paterno Apellido Materno" required>
+                    </div>
+
+                    <div class="form-row two-cols">
+                        <div>
+                            <label>Lugar de nacimiento: <span class="required">*</span></label>
+                            <input type="text" id="lugarNacimiento" name="lugarNacimiento" placeholder="Ciudad, Estado" required>
+                        </div>
+                        <div>
+                            <label>Fecha de nacimiento: <span class="required">*</span></label>
+                            <input type="date" id="fechaNacimiento" name="fechaNacimiento" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <label>Domicilio: <span class="required">*</span></label>
+                        <input type="text" id="domicilio" name="domicilio" placeholder="Calle, número, colonia, delegación/municipio" required>
+                    </div>
+
+                    <div class="form-row three-cols">
+                        <div>
+                            <label>Estado Civil: <span class="required">*</span></label>
+                            <select id="estadoCivil" name="estadoCivil" required>
+                                <option value="">Seleccione...</option>
+                                <option value="Soltero(a)">Soltero(a)</option>
+                                <option value="Casado(a)">Casado(a)</option>
+                                <option value="Unión Libre">Unión Libre</option>
+                                <option value="Divorciado(a)">Divorciado(a)</option>
+                                <option value="Viudo(a)">Viudo(a)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Sexo: <span class="required">*</span></label>
+                            <select id="sexo" name="sexo" required>
+                                <option value="">Seleccione...</option>
+                                <option value="Masculino">Masculino</option>
+                                <option value="Femenino">Femenino</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Teléfono: <span class="required">*</span></label>
+                            <input type="tel" id="telefono" name="telefono" placeholder="10 dígitos" pattern="[0-9]{10}" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row two-cols">
+                        <div>
+                            <label>Grado de Escolaridad: <span class="required">*</span></label>
+                            <select id="escolaridad" name="escolaridad" required>
+                                <option value="">Seleccione...</option>
+                                <option value="Primaria">Primaria</option>
+                                <option value="Secundaria">Secundaria</option>
+                                <option value="Preparatoria">Preparatoria</option>
+                                <option value="Carrera Técnica">Carrera Técnica</option>
+                                <option value="Licenciatura">Licenciatura</option>
+                                <option value="Posgrado">Posgrado</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>CURP: <span class="required">*</span></label>
+                            <input type="text" id="curp" name="curp" placeholder="18 caracteres" minlength="18" maxlength="18" style="text-transform: uppercase;" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <label>Fotografía tamaño infantil: <span class="required">*</span></label>
+                        <input type="file" id="foto" name="foto" accept="image/jpeg,image/jpg,image/png" required>
+                        <small>Formatos permitidos: JPG, JPEG, PNG (máx. 5MB)</small>
+                        <div id="previewFoto" class="preview-foto"></div>
+                    </div>
+                </div>
+
+                <div class="declaracion-final">
+                    <p>He recibido y tengo información del movimiento obrero nacional de la C.T.M. y en especial del Sindicato al cual deseo formar parte.</p>
+                    <p>En espera de su acuerdo favorable <strong>PROTESTO "RESPETO, LEALTAD Y DISCIPLINA AL SINDICATO Y SUS REPRESENTANTES"</strong>.</p>
+                </div>
+
+                <div class="firma-section">
+                    <div class="fecha-firma">
+                        <p>CDMX. a <span id="diaActual"></span> de <span id="mesActual"></span> del <span id="anioActual"></span>.</p>
+                    </div>
+                    
+                    <div class="form-row">
+                        <label>
+                            <input type="checkbox" id="aceptoTerminos" required>
+                            Acepto que toda la información proporcionada es verídica y estoy consciente de las obligaciones que adquiero al afiliarme al sindicato.
+                        </label>
+                    </div>
+                </div>
+
+                <div class="buttons">
+                    <button type="button" class="btn-secondary" id="btnLimpiar">Limpiar formulario</button>
+                    <button type="submit" class="btn-primary">Enviar solicitud</button>
+                </div>
+            </form>
+        </main>
+
+        <footer class="footer">
+            <p>Atentamente</p>
+            <div id="nombreFirma"></div>
+        </footer>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js';
+        import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCcBqpSXsz_wqm3xyg0NSJYnvQTK0NhkXg",
+            authDomain: "formatovacaciones.firebaseapp.com",
+            projectId: "formatovacaciones",
+            storageBucket: "formatovacaciones.firebasestorage.app",
+            messagingSenderId: "753669687689",
+            appId: "1:753669687689:web:b37af5de6ba6b1391ef958",
+            measurementId: "G-LMKRM8VKM7"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        window.db = getFirestore(app);
+    </script>
+    
+    <script type="module" src="afiliacion.js"></script>
+</body>
+</html>

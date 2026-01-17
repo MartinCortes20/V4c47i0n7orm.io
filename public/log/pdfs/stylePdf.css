@@ -41,6 +41,13 @@ header p {
     font-size: 16px;
 }
 
+h2 {
+    text-align: center;
+    margin: 30px 0 20px;
+    color: #2c3e50;
+    font-weight: 600;
+}
+
 .service-buttons {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -84,6 +91,13 @@ header p {
     text-align: center;
 }
 
+.btn-desc {
+    font-size: 12px;
+    color: #7f8c8d;
+    margin-top: 5px;
+    font-weight: normal;
+}
+
 .logout-section {
     text-align: center;
     margin-top: 50px;
@@ -103,10 +117,24 @@ header p {
     cursor: pointer;
     font-size: 16px;
     transition: background-color 0.3s;
+    font-weight: 600;
 }
 
 .logout-btn:hover {
     background-color: #c0392b;
+}
+
+/* Estilos específicos para botones de cena */
+.service-btn[data-service="PAVO"],
+.service-btn[data-service="PIERNA"] {
+    background-color: #fff8f8;
+    border: 2px solid #ffcdd2;
+}
+
+.service-btn[data-service="PAVO"]:hover,
+.service-btn[data-service="PIERNA"]:hover {
+    border-color: #c62828;
+    background-color: #ffebee;
 }
 
 /* Responsive */
@@ -150,25 +178,4 @@ header p {
     .btn-text {
         font-size: 14px;
     }
-}
-
-/* Estilos para los botones de cena navideña */
-.service-btn .btn-desc {
-    font-size: 12px;
-    color: #7f8c8d;
-    margin-top: 5px;
-    font-weight: normal;
-}
-
-.service-btn[data-service="PAVO"],
-.service-btn[data-service="PIERNA"] {
-    min-height: 100px;
-    background-color: #fff8f8;
-    border: 2px solid #ffcdd2;
-}
-
-.service-btn[data-service="PAVO"]:hover,
-.service-btn[data-service="PIERNA"]:hover {
-    border-color: #c62828;
-    background-color: #ffebee;
 }

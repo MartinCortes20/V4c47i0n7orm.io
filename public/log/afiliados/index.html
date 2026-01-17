@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administración de Afiliados</title>
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+    <div class="admin-container">
+        <header class="header">
+            <div class="header-content">
+                <h1>🏭 Gestión de Afiliados</h1>
+                <p>Sistema de control de altas, bajas y reingresos</p>
+            </div>
+            <button class="btn-logout" id="btnCerrarSesion">Cerrar Sesión</button>
+        </header>
+
+        <div class="main-content">
+            <!-- Estadísticas -->
+            <div class="stats-container">
+                <div class="stat-card">
+                    <div class="stat-icon">👥</div>
+                    <div class="stat-info">
+                        <h3 id="totalActivos">0</h3>
+                        <p>Activos</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">⏸️</div>
+                    <div class="stat-info">
+                        <h3 id="totalBajas">0</h3>
+                        <p>Dados de Baja</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🔄</div>
+                    <div class="stat-info">
+                        <h3 id="totalReingresos">0</h3>
+                        <p>Reingresos</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🚫</div>
+                    <div class="stat-info">
+                        <h3 id="totalDespidos">0</h3>
+                        <p>Despidos</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filtros y búsqueda -->
+            <div class="filters-section">
+                <h2>Filtros de Búsqueda</h2>
+                <div class="filters-grid">
+                    <div class="filter-group">
+                        <label>Buscar por nombre o CURP:</label>
+                        <input type="text" id="searchInput" placeholder="Escribe para buscar...">
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label>Estado:</label>
+                        <select id="filterStatus">
+                            <option value="">Todos</option>
+                            <option value="A">Activos (A)</option>
+                            <option value="B">Dados de Baja (B)</option>
+                            <option value="R">Reingresos (R)</option>
+                            <option value="D">Despidos (D)</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Mes de primera alta:</label>
+                        <select id="filterMes">
+                            <option value="">Todos</option>
+                            <option value="0">Enero</option>
+                            <option value="1">Febrero</option>
+                            <option value="2">Marzo</option>
+                            <option value="3">Abril</option>
+                            <option value="4">Mayo</option>
+                            <option value="5">Junio</option>
+                            <option value="6">Julio</option>
+                            <option value="7">Agosto</option>
+                            <option value="8">Septiembre</option>
+                            <option value="9">Octubre</option>
+                            <option value="10">Noviembre</option>
+                            <option value="11">Diciembre</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Año de primera alta:</label>
+                        <input type="number" id="filterAnio" placeholder="Ej: 2026" min="2020" max="2030">
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Tiempo desde baja:</label>
+                        <select id="filterTiempoBaja">
+                            <option value="">Todos</option>
+                            <option value="6+">6+ meses (Pueden reingresar)</option>
+                            <option value="3-6">3-6 meses</option>
+                            <option value="0-3">0-3 meses</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Ordenar por:</label>
+                        <select id="sortBy">
+                            <option value="fechaAlta-desc">Fecha de alta (más reciente)</option>
+                            <option value="fechaAlta-asc">Fecha de alta (más antigua)</option>
+                            <option value="nombre-asc">Nombre (A-Z)</option>
+                            <option value="nombre-desc">Nombre (Z-A)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="filter-actions">
+                    <button class="btn-primary" id="btnAplicarFiltros">Aplicar Filtros</button>
+                    <button class="btn-secondary" id="btnLimpiarFiltros">Limpiar Filtros</button>
+                </div>
+            </div>
+
+            <!-- Tabla de afiliados -->
+            <div class="table-section">
+                <div class="table-header">
+                    <h2>Lista de Afiliados</h2>
+                    <div class="table-actions">
+                        <span id="resultCount">0 resultados</span>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table id="tablaAfiliados">
+                        <thead>
+                            <tr>
+                                <th>Foto</th>
+                                <th>Nombre</th>
+                                <th>CURP</th>
+                                <th>Puesto</th>
+                                <th>Estado</th>
+                                <th>Fecha Alta</th>
+                                <th>Tiempo Activo</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaBody">
+                            <tr>
+                                <td colspan="8" class="loading-row">
+                                    <div class="spinner-small"></div>
+                                    Cargando datos...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para ver detalles -->
+    <div id="modalDetalles" class="modal">
+        <div class="modal-content large">
+            <div class="modal-header">
+                <h2>Detalles del Afiliado</h2>
+                <button class="close-btn" onclick="closeModal('modalDetalles')">&times;</button>
+            </div>
+            <div id="detallesContent" class="modal-body">
+                <!-- Se llenará dinámicamente -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para dar de baja -->
+    <div id="modalBaja" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Dar de Baja</h2>
+                <button class="close-btn" onclick="closeModal('modalBaja')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Estás a punto de dar de baja a:</p>
+                <p class="highlight-name" id="nombreBaja"></p>
+                
+                <div class="form-group">
+                    <label>Motivo de la baja: <span class="required">*</span></label>
+                    <textarea id="motivoBaja" rows="4" placeholder="Describe el motivo de la baja..." required></textarea>
+                </div>
+
+                <div class="modal-buttons">
+                    <button class="btn-danger" id="btnConfirmarBaja">Dar de Baja</button>
+                    <button class="btn-secondary" onclick="closeModal('modalBaja')">Cancelar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para reingreso -->
+    <div id="modalReingreso" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Reingreso de Afiliado</h2>
+                <button class="close-btn" onclick="closeModal('modalReingreso')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="reingresoInfo"></div>
+                <div class="modal-buttons">
+                    <button class="btn-success" id="btnConfirmarReingreso">Confirmar Reingreso</button>
+                    <button class="btn-secondary" onclick="closeModal('modalReingreso')">Cancelar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de confirmación -->
+    <div id="modalConfirm" class="modal">
+        <div class="modal-content small">
+            <div class="modal-header">
+                <h2>Confirmación</h2>
+            </div>
+            <div class="modal-body">
+                <p id="confirmMessage"></p>
+                <div class="modal-buttons">
+                    <button class="btn-primary" id="btnConfirmYes">Sí, continuar</button>
+                    <button class="btn-secondary" id="btnConfirmNo">Cancelar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js';
+        import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCcBqpSXsz_wqm3xyg0NSJYnvQTK0NhkXg",
+            authDomain: "formatovacaciones.firebaseapp.com",
+            projectId: "formatovacaciones",
+            storageBucket: "formatovacaciones.firebasestorage.app",
+            messagingSenderId: "753669687689",
+            appId: "1:753669687689:web:b37af5de6ba6b1391ef958",
+            measurementId: "G-LMKRM8VKM7"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        window.db = getFirestore(app);
+    </script>
+    
+    <script type="module" src="admin.js"></script>
+</body>
+</html>
