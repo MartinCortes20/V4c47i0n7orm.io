@@ -349,6 +349,18 @@ tbody tr:hover {
     background: #229954;
 }
 
+.btn-reingreso-disabled {
+    background: #95a5a6;
+    color: white;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.btn-reingreso-disabled:hover {
+    background: #7f8c8d;
+    transform: none;
+}
+
 .btn-planta {
     background: #f9a825;
     color: white;

@@ -176,8 +176,15 @@ function mostrarAfiliados(afiliados) {
     tbody.innerHTML = afiliados.map(afiliado => {
         const tiempoActivo = calcularTiempoActivo(afiliado);
         const statusTexto = getStatusTexto(afiliado.status);
-        const puedeReingresar = verificarPuedeReingresar(afiliado);
         const fotoSrc = afiliado.fotoBase64 || afiliado.fotoURL || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="50" height="50"%3E%3Crect fill="%23ddd" width="50" height="50"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%23999"%3E?%3C/text%3E%3C/svg%3E';
+        
+        // Verificar si puede reingresar (6 meses desde baja)
+        let puedeReingresar = false;
+        let mesesDesdeInhabilitacion = 0;
+        if (afiliado.status === 'B' && afiliado.fechaBaja) {
+            mesesDesdeInhabilitacion = calcularMesesDesde(afiliado.fechaBaja.toDate());
+            puedeReingresar = mesesDesdeInhabilitacion >= 6 && (afiliado.totalReingresos || 0) < 2;
+        }
 
         return `
             <tr>
@@ -194,8 +201,11 @@ function mostrarAfiliados(afiliados) {
                         ${afiliado.status === 'A' || afiliado.status === 'R' ? 
                             `<button class="btn-small btn-baja" onclick="mostrarModalBaja('${afiliado.id}')">Dar de Baja</button>` 
                             : ''}
-                        ${afiliado.status === 'B' && puedeReingresar ? 
-                            `<button class="btn-small btn-reingreso" onclick="mostrarModalReingreso('${afiliado.id}')">Reingresar</button>` 
+                        ${afiliado.status === 'B' ? 
+                            puedeReingresar ? 
+                                `<button class="btn-small btn-reingreso" onclick="mostrarModalReingreso('${afiliado.id}')">Reingresar</button>` 
+                                : 
+                                `<button class="btn-small btn-reingreso-disabled" onclick="mostrarMensajeNoReingresar('${afiliado.id}', ${mesesDesdeInhabilitacion.toFixed(1)})">Reingresar</button>`
                             : ''}
                         ${(afiliado.status === 'A' || afiliado.status === 'R') && afiliado.status !== 'AP' ? 
                             `<button class="btn-small btn-planta" onclick="mostrarModalPlanta('${afiliado.id}')">Otorgar Planta</button>` 
@@ -579,6 +589,72 @@ async function confirmarBaja() {
     };
 }
 
+// Mostrar mensaje cuando no puede reingresar aún
+window.mostrarMensajeNoReingresar = function(id, mesesDesdeInhabilitacion) {
+    const afiliado = todosLosAfiliados.find(a => a.id === id);
+    if (!afiliado) return;
+    
+    const mesesFaltantes = Math.ceil(6 - mesesDesdeInhabilitacion);
+    const fechaBaja = afiliado.fechaBaja.toDate();
+    const fechaPuedeReingresar = new Date(fechaBaja);
+    fechaPuedeReingresar.setMonth(fechaPuedeReingresar.getMonth() + 6);
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.style.display = 'block';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>⏱️ No Puede Reingresar</h2>
+                <button class="close-btn" onclick="this.closest('.modal').remove()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="alert-box alert-danger">
+                    <strong>❌ No puedes reingresarlo aún</strong><br>
+                    El empleado no ha cumplido los <strong>6 meses de descanso</strong> obligatorios.
+                </div>
+                
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <div class="detail-label">Nombre</div>
+                        <div class="detail-value">${afiliado.nombreCompleto}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Fecha de Baja</div>
+                        <div class="detail-value">${formatearFecha(fechaBaja)}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Tiempo Transcurrido</div>
+                        <div class="detail-value">${Math.floor(mesesDesdeInhabilitacion)} mes(es) y ${Math.floor((mesesDesdeInhabilitacion % 1) * 30)} día(s)</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Tiempo Faltante</div>
+                        <div class="detail-value" style="color: #e74c3c; font-weight: 700;">${mesesFaltantes} mes(es)</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Podrá Reingresar Desde</div>
+                        <div class="detail-value" style="color: #27ae60; font-weight: 700;">${formatearFecha(fechaPuedeReingresar)}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Motivo de Baja</div>
+                        <div class="detail-value">${afiliado.motivoBaja || 'No especificado'}</div>
+                    </div>
+                </div>
+                
+                <div class="alert-box alert-info">
+                    <strong>ℹ️ Periodo de Descanso Obligatorio</strong><br>
+                    El reglamento establece que después de una baja, el empleado debe cumplir un período de <strong>6 meses de descanso</strong> antes de poder ser reingresado. Esto garantiza que tanto el empleado como la empresa tengan tiempo adecuado para evaluar la situación.
+                </div>
+                
+                <div class="modal-buttons">
+                    <button class="btn-primary" onclick="this.closest('.modal').remove()">Entendido</button>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+};
+
 // Mostrar modal de reingreso
 window.mostrarModalReingreso = function(id) {
     afiliadoSeleccionado = todosLosAfiliados.find(a => a.id === id);
@@ -589,66 +665,54 @@ window.mostrarModalReingreso = function(id) {
     const mesesRestantes = Math.max(0, 24 - mesesActivos);
     const totalReingresos = afiliadoSeleccionado.totalReingresos || 0;
 
-    let mensaje = '';
-    let puedeReingresar = true;
-
-    if (totalReingresos >= 2) {
-        mensaje = `<div class="alert-box alert-danger">
-            Este afiliado ya ha alcanzado el límite de 2 reingresos. No puede volver a ingresar.
-        </div>`;
-        puedeReingresar = false;
-    } else if (mesesDesdeInhabilitación < 6) {
-        mensaje = `<div class="alert-box alert-warning">
-            Este afiliado no puede reingresar aún. Debe esperar ${Math.ceil(6 - mesesDesdeInhabilitación)} mes(es) más.
-        </div>`;
-        puedeReingresar = false;
-    } else if (mesesActivos >= 24) {
-        mensaje = `<div class="alert-box alert-danger">
-            Este afiliado ya cumplió los 24 meses permitidos. No puede reingresar.
-        </div>`;
-        puedeReingresar = false;
-    } else {
-        mensaje = `
-            <div class="alert-box alert-success">
-                <strong>✓ Este afiliado puede reingresar</strong>
+    const mensaje = `
+        <div class="alert-box alert-success">
+            <strong>✓ Este afiliado puede reingresar</strong><br>
+            Ha cumplido el período de descanso de 6 meses.
+        </div>
+        
+        <div class="detail-grid">
+            <div class="detail-item">
+                <div class="detail-label">Nombre</div>
+                <div class="detail-value">${afiliadoSeleccionado.nombreCompleto}</div>
             </div>
-            <div class="detail-grid">
-                <div class="detail-item">
-                    <div class="detail-label">Nombre</div>
-                    <div class="detail-value">${afiliadoSeleccionado.nombreCompleto}</div>
-                </div>
-                <div class="detail-item">
-                    <div class="detail-label">Meses activos acumulados</div>
-                    <div class="detail-value">${Math.round(mesesActivos)} meses</div>
-                </div>
-                <div class="detail-item">
-                    <div class="detail-label">Meses restantes hasta 24</div>
-                    <div class="detail-value">${Math.round(mesesRestantes)} meses</div>
-                </div>
-                <div class="detail-item">
-                    <div class="detail-label">Reingresos previos</div>
-                    <div class="detail-value">${totalReingresos} de 2</div>
-                </div>
-                <div class="detail-item">
-                    <div class="detail-label">Fecha de baja</div>
-                    <div class="detail-value">${formatearFecha(afiliadoSeleccionado.fechaBaja.toDate())}</div>
-                </div>
-                <div class="detail-item">
-                    <div class="detail-label">Motivo de baja</div>
-                    <div class="detail-value">${afiliadoSeleccionado.motivoBaja}</div>
-                </div>
+            <div class="detail-item">
+                <div class="detail-label">Meses activos acumulados</div>
+                <div class="detail-value">${Math.round(mesesActivos)} meses</div>
             </div>
-        `;
-    }
+            <div class="detail-item">
+                <div class="detail-label">Meses restantes hasta 24</div>
+                <div class="detail-value">${Math.round(mesesRestantes)} meses</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Reingresos previos</div>
+                <div class="detail-value">${totalReingresos} de 2</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Fecha de baja</div>
+                <div class="detail-value">${formatearFecha(afiliadoSeleccionado.fechaBaja.toDate())}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Tiempo desde baja</div>
+                <div class="detail-value">${Math.round(mesesDesdeInhabilitación)} mes(es)</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Motivo de baja</div>
+                <div class="detail-value">${afiliadoSeleccionado.motivoBaja || 'No especificado'}</div>
+            </div>
+        </div>
+        
+        <div class="alert-box alert-info">
+            <strong>ℹ️ Sobre el Reingreso</strong><br>
+            Al confirmar, el empleado pasará a estado de <strong>Reingreso (R)</strong> y podrá continuar acumulando tiempo hasta completar los 24 meses permitidos.
+        </div>
+    `;
 
     document.getElementById('reingresoInfo').innerHTML = mensaje;
-    document.getElementById('btnConfirmarReingreso').style.display = puedeReingresar ? 'inline-block' : 'none';
+    document.getElementById('btnConfirmarReingreso').style.display = 'inline-block';
     
     openModal('modalReingreso');
-    
-    if (puedeReingresar) {
-        document.getElementById('btnConfirmarReingreso').onclick = confirmarReingreso;
-    }
+    document.getElementById('btnConfirmarReingreso').onclick = confirmarReingreso;
 };
 
 // Confirmar reingreso
