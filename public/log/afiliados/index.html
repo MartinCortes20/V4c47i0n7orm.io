@@ -41,6 +41,13 @@
                     </div>
                 </div>
                 <div class="stat-card">
+                    <div class="stat-icon">🌟</div>
+                    <div class="stat-info">
+                        <h3 id="totalPlanta">0</h3>
+                        <p>Con Planta</p>
+                    </div>
+                </div>
+                <div class="stat-card">
                     <div class="stat-icon">🚫</div>
                     <div class="stat-info">
                         <h3 id="totalDespidos">0</h3>
@@ -65,7 +72,9 @@
                             <option value="A">Activos (A)</option>
                             <option value="B">Dados de Baja (B)</option>
                             <option value="R">Reingresos (R)</option>
+                            <option value="AP">Alta Planta (AP)</option>
                             <option value="D">Despidos (D)</option>
+                            <option value="PUEDE_PLANTA">Ya cumplieron 24+ meses (referencia)</option>
                         </select>
                     </div>
 
@@ -206,6 +215,23 @@
                 <div class="modal-buttons">
                     <button class="btn-success" id="btnConfirmarReingreso">Confirmar Reingreso</button>
                     <button class="btn-secondary" onclick="closeModal('modalReingreso')">Cancelar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para otorgar planta -->
+    <div id="modalPlanta" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🌟 Otorgar Planta</h2>
+                <button class="close-btn" onclick="closeModal('modalPlanta')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="plantaInfo"></div>
+                <div class="modal-buttons">
+                    <button class="btn-success" id="btnConfirmarPlanta">Otorgar Planta</button>
+                    <button class="btn-secondary" onclick="closeModal('modalPlanta')">Cancelar</button>
                 </div>
             </div>
         </div>

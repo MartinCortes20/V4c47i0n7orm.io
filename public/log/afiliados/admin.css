@@ -300,6 +300,13 @@ tbody tr:hover {
     color: #922b21;
 }
 
+.status-AP {
+    background: #fff9c4;
+    color: #f57f17;
+    font-weight: 700;
+    border: 2px solid #f9a825;
+}
+
 .action-buttons {
     display: flex;
     gap: 5px;
@@ -340,6 +347,16 @@ tbody tr:hover {
 
 .btn-reingreso:hover {
     background: #229954;
+}
+
+.btn-planta {
+    background: #f9a825;
+    color: white;
+    font-weight: 600;
+}
+
+.btn-planta:hover {
+    background: #f57f17;
 }
 
 .loading-row {

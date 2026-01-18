@@ -52,11 +52,13 @@ function actualizarEstadisticas() {
     const bajas = todosLosAfiliados.filter(a => a.status === 'B').length;
     const reingresos = todosLosAfiliados.filter(a => a.status === 'R').length;
     const despidos = todosLosAfiliados.filter(a => a.status === 'D').length;
+    const planta = todosLosAfiliados.filter(a => a.status === 'AP').length;
 
     document.getElementById('totalActivos').textContent = activos;
     document.getElementById('totalBajas').textContent = bajas;
     document.getElementById('totalReingresos').textContent = reingresos;
     document.getElementById('totalDespidos').textContent = despidos;
+    document.getElementById('totalPlanta').textContent = planta;
 }
 
 // Aplicar filtros
@@ -80,7 +82,12 @@ function aplicarFiltros() {
 
     // Filtro de estado
     if (filterStatus) {
-        filtrados = filtrados.filter(a => a.status === filterStatus);
+        if (filterStatus === 'PUEDE_PLANTA') {
+            // Filtro especial: mostrar solo los que pueden recibir planta
+            filtrados = filtrados.filter(a => verificarPuedePlanta(a));
+        } else {
+            filtrados = filtrados.filter(a => a.status === filterStatus);
+        }
     }
 
     // Filtro de mes
@@ -190,6 +197,9 @@ function mostrarAfiliados(afiliados) {
                         ${afiliado.status === 'B' && puedeReingresar ? 
                             `<button class="btn-small btn-reingreso" onclick="mostrarModalReingreso('${afiliado.id}')">Reingresar</button>` 
                             : ''}
+                        ${(afiliado.status === 'A' || afiliado.status === 'R') && afiliado.status !== 'AP' ? 
+                            `<button class="btn-small btn-planta" onclick="mostrarModalPlanta('${afiliado.id}')">Otorgar Planta</button>` 
+                            : ''}
                     </div>
                 </td>
             </tr>
@@ -235,13 +245,33 @@ function verificarPuedeReingresar(afiliado) {
     return mesesDesdeInhabilitación >= 6;
 }
 
+// Verificar si puede recibir planta
+function verificarPuedePlanta(afiliado) {
+    // Solo pueden recibir planta los que están activos (A) o en reingreso (R)
+    if (afiliado.status !== 'A' && afiliado.status !== 'R') return false;
+    
+    // Calcular meses activos totales
+    let mesesTotales = afiliado.mesesActivos || 0;
+    
+    // Agregar tiempo actual si está activo
+    if (afiliado.status === 'A' || afiliado.status === 'R') {
+        const fechaInicio = afiliado.fechaReingreso ? afiliado.fechaReingreso.toDate() : afiliado.fechaAlta.toDate();
+        const mesesActuales = calcularMesesDesde(fechaInicio);
+        mesesTotales += mesesActuales;
+    }
+    
+    // Debe tener 24 meses o más
+    return mesesTotales >= 24;
+}
+
 // Obtener texto de status
 function getStatusTexto(status) {
     const statusMap = {
         'A': 'Activo',
         'B': 'Baja',
         'R': 'Reingreso',
-        'D': 'Despido'
+        'D': 'Despido',
+        'AP': 'Alta Planta'
     };
     return statusMap[status] || status;
 }
@@ -360,11 +390,129 @@ window.verDetalles = function(id) {
                     <div class="detail-value">${afiliado.motivoDespido}</div>
                 </div>
             ` : ''}
+            ${afiliado.fechaPlanta ? `
+                <div class="detail-item" style="background: #fff9c4; border-left-color: #f9a825;">
+                    <div class="detail-label" style="color: #f57f17;">🌟 Fecha de Planta</div>
+                    <div class="detail-value" style="font-weight: 700; color: #f57f17;">${formatearFecha(afiliado.fechaPlanta.toDate())}</div>
+                </div>
+            ` : ''}
         </div>
     `;
 
     openModal('modalDetalles');
 };
+
+// Mostrar modal de planta
+window.mostrarModalPlanta = function(id) {
+    afiliadoSeleccionado = todosLosAfiliados.find(a => a.id === id);
+    if (!afiliadoSeleccionado) return;
+
+    // Calcular meses totales
+    let mesesTotales = afiliadoSeleccionado.mesesActivos || 0;
+    if (afiliadoSeleccionado.status === 'A' || afiliadoSeleccionado.status === 'R') {
+        const fechaInicio = afiliadoSeleccionado.fechaReingreso ? 
+            afiliadoSeleccionado.fechaReingreso.toDate() : 
+            afiliadoSeleccionado.fechaAlta.toDate();
+        const mesesActuales = calcularMesesDesde(fechaInicio);
+        mesesTotales += mesesActuales;
+    }
+
+    const años = Math.floor(mesesTotales / 12);
+    const meses = Math.round(mesesTotales % 12);
+    const cumple24Meses = mesesTotales >= 24;
+
+    const mensaje = `
+        ${cumple24Meses ? `
+            <div class="alert-box alert-success">
+                <strong>✓ Este afiliado ya cumplió los 24 meses reglamentarios</strong>
+            </div>
+        ` : `
+            <div class="alert-box alert-warning">
+                <strong>⚠️ Este afiliado aún no cumple 24 meses</strong><br>
+                Como administrador, puedes otorgar planta de manera anticipada si lo consideras necesario.
+            </div>
+        `}
+        
+        <div class="detail-grid">
+            <div class="detail-item">
+                <div class="detail-label">Nombre</div>
+                <div class="detail-value">${afiliadoSeleccionado.nombreCompleto}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Tiempo Total Acumulado</div>
+                <div class="detail-value">${años} año${años !== 1 ? 's' : ''} ${meses} mes${meses !== 1 ? 'es' : ''}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Estado Actual</div>
+                <div class="detail-value"><span class="status-badge status-${afiliadoSeleccionado.status}">${getStatusTexto(afiliadoSeleccionado.status)}</span></div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Fecha de Alta Original</div>
+                <div class="detail-value">${formatearFecha(afiliadoSeleccionado.fechaAlta.toDate())}</div>
+            </div>
+            ${afiliadoSeleccionado.fechaReingreso ? `
+                <div class="detail-item">
+                    <div class="detail-label">Fecha de Último Reingreso</div>
+                    <div class="detail-value">${formatearFecha(afiliadoSeleccionado.fechaReingreso.toDate())}</div>
+                </div>
+            ` : ''}
+        </div>
+        
+        <div class="alert-box alert-info">
+            <strong>¿Qué significa "PLANTA"?</strong><br>
+            Al otorgar planta, el empleado pasa a tener un estatus permanente (Alta Planta - AP). 
+            Normalmente se otorga después de 24 meses de servicio activo, pero como administrador 
+            puedes otorgarlo en cualquier momento por méritos especiales o decisión de la empresa.
+        </div>
+    `;
+
+    document.getElementById('plantaInfo').innerHTML = mensaje;
+    openModal('modalPlanta');
+    
+    document.getElementById('btnConfirmarPlanta').onclick = confirmarPlanta;
+};
+
+// Confirmar planta
+async function confirmarPlanta() {
+    document.getElementById('confirmMessage').textContent = '¿Confirmas otorgar PLANTA a este afiliado?';
+    openModal('modalConfirm');
+    
+    document.getElementById('btnConfirmYes').onclick = async () => {
+        closeModal('modalConfirm');
+        closeModal('modalPlanta');
+        
+        try {
+            showLoading();
+
+            // Calcular meses activos totales al momento de otorgar planta
+            const fechaInicio = afiliadoSeleccionado.fechaReingreso ? 
+                afiliadoSeleccionado.fechaReingreso.toDate() : 
+                afiliadoSeleccionado.fechaAlta.toDate();
+            const mesesActualesActivos = calcularMesesDesde(fechaInicio);
+            const nuevosTotalMeses = (afiliadoSeleccionado.mesesActivos || 0) + mesesActualesActivos;
+
+            // Actualizar documento
+            const afiliadoRef = doc(window.db, 'ingresos', afiliadoSeleccionado.id);
+            await updateDoc(afiliadoRef, {
+                status: 'AP',
+                fechaPlanta: Timestamp.now(),
+                mesesActivos: nuevosTotalMeses
+            });
+
+            hideLoading();
+            mostrarExito('Planta otorgada exitosamente');
+            cargarAfiliados();
+        } catch (error) {
+            hideLoading();
+            console.error('Error al otorgar planta:', error);
+            mostrarError('Error al procesar la planta');
+        }
+    };
+    
+    document.getElementById('btnConfirmNo').onclick = () => {
+        closeModal('modalConfirm');
+    };
+}
 
 // Mostrar modal de baja
 window.mostrarModalBaja = function(id) {
