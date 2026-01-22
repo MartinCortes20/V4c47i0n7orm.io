@@ -193,7 +193,7 @@ function mostrarAfiliados(afiliados) {
                 <td>${afiliado.curp}</td>
                 <td>${afiliado.puesto}</td>
                 <td><span class="status-badge status-${afiliado.status}">${statusTexto}</span></td>
-                <td>${formatearFecha(afiliado.fechaAlta.toDate())}</td>
+                <td>${afiliado.fechaIngresoEmpresa ? formatearFechaString(afiliado.fechaIngresoEmpresa) : 'No especificada'}</td>
                 <td>${tiempoActivo}</td>
                 <td>
                     <div class="action-buttons">
@@ -294,6 +294,31 @@ function formatearFecha(fecha) {
         month: 'long',
         day: 'numeric'
     });
+}
+
+// Formatear fecha desde string (evita problemas de zona horaria)
+function formatearFechaString(fechaString) {
+    if (!fechaString) return 'No especificada';
+    
+    // Si ya es un objeto Date
+    if (fechaString instanceof Date) {
+        return formatearFecha(fechaString);
+    }
+    
+    // Si es un string en formato YYYY-MM-DD
+    const partes = fechaString.split('-');
+    if (partes.length === 3) {
+        const año = parseInt(partes[0]);
+        const mes = parseInt(partes[1]) - 1; // Meses en JavaScript van de 0-11
+        const dia = parseInt(partes[2]);
+        
+        // Crear fecha en hora local (no UTC)
+        const fecha = new Date(año, mes, dia);
+        return formatearFecha(fecha);
+    }
+    
+    // Fallback: intentar parsear normalmente
+    return formatearFecha(new Date(fechaString));
 }
 
 // Editar afiliado
@@ -560,10 +585,6 @@ window.verDetalles = function(id) {
                 <div class="detail-value">$${afiliado.salarioDiario.toFixed(2)}</div>
             </div>
             <div class="detail-item">
-                <div class="detail-label">Fecha Ingreso Empresa</div>
-                <div class="detail-value">${afiliado.fechaIngresoEmpresa}</div>
-            </div>
-            <div class="detail-item">
                 <div class="detail-label">Estado</div>
                 <div class="detail-value"><span class="status-badge status-${afiliado.status}">${getStatusTexto(afiliado.status)}</span></div>
             </div>
@@ -571,6 +592,12 @@ window.verDetalles = function(id) {
                 <div class="detail-label">Fecha de Alta</div>
                 <div class="detail-value">${formatearFecha(afiliado.fechaAlta.toDate())}</div>
             </div>
+            ${afiliado.fechaIngresoEmpresa ? `
+                <div class="detail-item" style="background: #ffe6e6; border-left-color: #e74c3c;">
+                    <div class="detail-label" style="color: #c0392b; font-weight: 700;">Fecha de Ingreso a la Empresa</div>
+                    <div class="detail-value" style="font-weight: 700; color: #e74c3c;">${formatearFechaString(afiliado.fechaIngresoEmpresa)}</div>
+                </div>
+            ` : ''}
             <div class="detail-item">
                 <div class="detail-label">Tiempo Activo Total</div>
                 <div class="detail-value">${tiempoActivo}</div>
