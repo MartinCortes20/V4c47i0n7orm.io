@@ -237,6 +237,139 @@
         </div>
     </div>
 
+    <!-- Modal para editar afiliado -->
+    <div id="modalEditar" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2>✏️ Editar Datos del Afiliado</h2>
+                <button class="close-btn" onclick="closeModal('modalEditar')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="formEditar" onsubmit="event.preventDefault(); guardarEdicion();">
+                    
+                    <h3 class="section-title">Datos Personales</h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Nombre Completo: <span class="required">*</span></label>
+                            <input type="text" id="editNombreCompleto" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row two-cols">
+                        <div class="form-group">
+                            <label>CURP: <span class="required">*</span></label>
+                            <input type="text" id="editCurp" maxlength="18" style="text-transform: uppercase;" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Teléfono: <span class="required">*</span></label>
+                            <input type="tel" id="editTelefono" pattern="[0-9]{10}" placeholder="10 dígitos" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row two-cols">
+                        <div class="form-group">
+                            <label>Lugar de Nacimiento:</label>
+                            <input type="text" id="editLugarNacimiento">
+                        </div>
+                        <div class="form-group">
+                            <label>Fecha de Nacimiento:</label>
+                            <input type="date" id="editFechaNacimiento">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Domicilio:</label>
+                            <input type="text" id="editDomicilio">
+                        </div>
+                    </div>
+
+                    <div class="form-row three-cols">
+                        <div class="form-group">
+                            <label>Estado Civil:</label>
+                            <select id="editEstadoCivil">
+                                <option value="Soltero(a)">Soltero(a)</option>
+                                <option value="Casado(a)">Casado(a)</option>
+                                <option value="Unión Libre">Unión Libre</option>
+                                <option value="Divorciado(a)">Divorciado(a)</option>
+                                <option value="Viudo(a)">Viudo(a)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Sexo:</label>
+                            <select id="editSexo">
+                                <option value="Masculino">Masculino</option>
+                                <option value="Femenino">Femenino</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Escolaridad:</label>
+                            <select id="editEscolaridad">
+                                <option value="Primaria">Primaria</option>
+                                <option value="Secundaria">Secundaria</option>
+                                <option value="Preparatoria">Preparatoria</option>
+                                <option value="Carrera Técnica">Carrera Técnica</option>
+                                <option value="Licenciatura">Licenciatura</option>
+                                <option value="Posgrado">Posgrado</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <h3 class="section-title">Datos Laborales</h3>
+
+                    <div class="form-row two-cols">
+                        <div class="form-group">
+                            <label>Puesto:</label>
+                            <select id="editPuesto">
+                                <option value="Ayudante General B">Ayudante General B</option>
+                                <option value="Ayudante General A">Ayudante General A</option>
+                                <option value="Fabricante B">Fabricante B</option>
+                                <option value="Fabricante A">Fabricante A</option>
+                                <option value="Mecánico / Utilities">Mecánico / Utilities</option>
+                                <option value="Operador">Operador</option>
+                                <option value="Porteador">Porteador</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Salario Diario:</label>
+                            <input type="number" id="editSalarioDiario" step="0.01" min="0">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Fecha de Ingreso a la Empresa:</label>
+                            <input type="date" id="editFechaIngresoEmpresa">
+                        </div>
+                    </div>
+
+                    <h3 class="section-title">Fotografía</h3>
+
+                    <div id="fotoActualPreview"></div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Cambiar Foto (opcional):</label>
+                            <input type="file" id="editFoto" accept="image/jpeg,image/jpg,image/png">
+                            <small>Formatos: JPG, JPEG, PNG (máx. 5MB)</small>
+                            <div id="editFotoPreview"></div>
+                        </div>
+                    </div>
+
+                    <div class="alert-box alert-warning">
+                        <strong>⚠️ Importante:</strong> Los cambios en los datos personales, laborales o la foto se guardarán permanentemente. Asegúrate de que la información sea correcta antes de guardar.
+                    </div>
+
+                    <div class="modal-buttons">
+                        <button type="submit" class="btn-success">💾 Guardar Cambios</button>
+                        <button type="button" class="btn-secondary" onclick="closeModal('modalEditar')">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal de confirmación -->
     <div id="modalConfirm" class="modal">
         <div class="modal-content small">

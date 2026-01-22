@@ -42,7 +42,7 @@ async function cargarAfiliados() {
         aplicarFiltros();
     } catch (error) {
         console.error('Error al cargar afiliados:', error);
-        mostrarError('Error al cargar los datos');
+        mostrarError('No se pudieron cargar los datos. Por favor, intenta nuevamente.');
     }
 }
 
@@ -198,6 +198,7 @@ function mostrarAfiliados(afiliados) {
                 <td>
                     <div class="action-buttons">
                         <button class="btn-small btn-info" onclick="verDetalles('${afiliado.id}')">Ver</button>
+                        <button class="btn-small btn-edit" onclick="editarAfiliado('${afiliado.id}')">Editar</button>
                         ${afiliado.status === 'A' || afiliado.status === 'R' ? 
                             `<button class="btn-small btn-baja" onclick="mostrarModalBaja('${afiliado.id}')">Dar de Baja</button>` 
                             : ''}
@@ -294,6 +295,210 @@ function formatearFecha(fecha) {
         day: 'numeric'
     });
 }
+
+// Editar afiliado
+window.editarAfiliado = function(id) {
+    afiliadoSeleccionado = todosLosAfiliados.find(a => a.id === id);
+    if (!afiliadoSeleccionado) return;
+
+    // Rellenar el formulario con los datos actuales
+    document.getElementById('editNombreCompleto').value = afiliadoSeleccionado.nombreCompleto;
+    document.getElementById('editCurp').value = afiliadoSeleccionado.curp;
+    document.getElementById('editLugarNacimiento').value = afiliadoSeleccionado.lugarNacimiento;
+    document.getElementById('editFechaNacimiento').value = afiliadoSeleccionado.fechaNacimiento;
+    document.getElementById('editDomicilio').value = afiliadoSeleccionado.domicilio;
+    document.getElementById('editEstadoCivil').value = afiliadoSeleccionado.estadoCivil;
+    document.getElementById('editSexo').value = afiliadoSeleccionado.sexo;
+    document.getElementById('editTelefono').value = afiliadoSeleccionado.telefono;
+    document.getElementById('editEscolaridad').value = afiliadoSeleccionado.escolaridad;
+    document.getElementById('editPuesto').value = afiliadoSeleccionado.puesto;
+    document.getElementById('editSalarioDiario').value = afiliadoSeleccionado.salarioDiario;
+    document.getElementById('editFechaIngresoEmpresa').value = afiliadoSeleccionado.fechaIngresoEmpresa;
+
+    // Mostrar foto actual si existe
+    const fotoActualDiv = document.getElementById('fotoActualPreview');
+    const fotoSrc = afiliadoSeleccionado.fotoBase64 || afiliadoSeleccionado.fotoURL;
+    if (fotoSrc) {
+        fotoActualDiv.innerHTML = `
+            <div style="margin-bottom: 10px;">
+                <strong>Foto actual:</strong><br>
+                <img src="${fotoSrc}" alt="Foto actual" style="max-width: 150px; margin-top: 10px; border-radius: 8px; border: 2px solid #ddd;">
+            </div>
+        `;
+    } else {
+        fotoActualDiv.innerHTML = '<p style="color: #999;">Sin foto</p>';
+    }
+
+    // Limpiar el input de nueva foto
+    document.getElementById('editFoto').value = '';
+    document.getElementById('editFotoPreview').innerHTML = '';
+
+    openModal('modalEditar');
+};
+
+// Guardar cambios del afiliado editado
+window.guardarEdicion = async function() {
+    if (!afiliadoSeleccionado) return;
+
+    // Validar que los campos requeridos no estén vacíos
+    const nombreCompleto = document.getElementById('editNombreCompleto').value.trim();
+    const curp = document.getElementById('editCurp').value.trim().toUpperCase();
+    const telefono = document.getElementById('editTelefono').value.trim();
+
+    if (!nombreCompleto || !curp || !telefono) {
+        mostrarError('Por favor, completa todos los campos obligatorios antes de continuar.');
+        return;
+    }
+
+    // Validar CURP
+    if (curp.length !== 18) {
+        mostrarError('El CURP debe contener exactamente 18 caracteres.');
+        return;
+    }
+
+    // Validar teléfono
+    if (telefono.length !== 10 || !/^\d+$/.test(telefono)) {
+        mostrarError('El número telefónico debe contener exactamente 10 dígitos.');
+        return;
+    }
+
+    // Confirmar cambios
+    document.getElementById('confirmMessage').textContent = '¿Confirmas guardar los cambios realizados?';
+    openModal('modalConfirm');
+
+    document.getElementById('btnConfirmYes').onclick = async () => {
+        closeModal('modalConfirm');
+        
+        try {
+            showLoading();
+
+            // Preparar datos actualizados
+            const datosActualizados = {
+                nombreCompleto: nombreCompleto,
+                curp: curp,
+                lugarNacimiento: document.getElementById('editLugarNacimiento').value.trim(),
+                fechaNacimiento: document.getElementById('editFechaNacimiento').value,
+                domicilio: document.getElementById('editDomicilio').value.trim(),
+                estadoCivil: document.getElementById('editEstadoCivil').value,
+                sexo: document.getElementById('editSexo').value,
+                telefono: telefono,
+                escolaridad: document.getElementById('editEscolaridad').value,
+                puesto: document.getElementById('editPuesto').value,
+                salarioDiario: parseFloat(document.getElementById('editSalarioDiario').value),
+                fechaIngresoEmpresa: document.getElementById('editFechaIngresoEmpresa').value
+            };
+
+            // Procesar nueva foto si se subió una
+            const fotoInput = document.getElementById('editFoto');
+            if (fotoInput.files.length > 0) {
+                const fotoFile = fotoInput.files[0];
+                
+                // Validar tamaño
+                if (fotoFile.size > 5 * 1024 * 1024) {
+                    hideLoading();
+                    mostrarError('La fotografía no puede superar los 5 MB. Por favor, selecciona una imagen más pequeña.');
+                    return;
+                }
+
+                // Redimensionar y convertir a base64
+                const resizedPhoto = await resizeImage(fotoFile);
+                const photoBase64 = await convertToBase64(resizedPhoto);
+                datosActualizados.fotoBase64 = photoBase64;
+            }
+
+            // Actualizar en Firestore
+            const afiliadoRef = doc(window.db, 'ingresos', afiliadoSeleccionado.id);
+            await updateDoc(afiliadoRef, datosActualizados);
+
+            hideLoading();
+            closeModal('modalEditar');
+            mostrarExito('Los datos se han actualizado correctamente.');
+            cargarAfiliados();
+
+        } catch (error) {
+            hideLoading();
+            console.error('Error al actualizar:', error);
+            mostrarError('No se pudieron actualizar los datos. Por favor, intenta nuevamente.');
+        }
+    };
+
+    document.getElementById('btnConfirmNo').onclick = () => {
+        closeModal('modalConfirm');
+    };
+};
+
+// Funciones auxiliares para edición de foto
+async function resizeImage(file, maxWidth = 800, maxHeight = 1000, quality = 0.8) {
+    return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+
+                if (width > height) {
+                    if (width > maxWidth) {
+                        height = Math.round((height * maxWidth) / width);
+                        width = maxWidth;
+                    }
+                } else {
+                    if (height > maxHeight) {
+                        width = Math.round((width * maxHeight) / height);
+                        height = maxHeight;
+                    }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                canvas.toBlob((blob) => {
+                    resolve(new File([blob], file.name, {
+                        type: 'image/jpeg',
+                        lastModified: Date.now(),
+                    }));
+                }, 'image/jpeg', quality);
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+async function convertToBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
+// Preview de nueva foto en el modal de edición
+document.addEventListener('DOMContentLoaded', function() {
+    const editFotoInput = document.getElementById('editFoto');
+    if (editFotoInput) {
+        editFotoInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('editFotoPreview').innerHTML = `
+                        <div style="margin-top: 10px;">
+                            <strong>Nueva foto:</strong><br>
+                            <img src="${e.target.result}" alt="Preview" style="max-width: 150px; margin-top: 10px; border-radius: 8px; border: 2px solid #3498db;">
+                        </div>
+                    `;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+});
 
 // Ver detalles
 window.verDetalles = function(id) {
@@ -510,12 +715,12 @@ async function confirmarPlanta() {
             });
 
             hideLoading();
-            mostrarExito('Planta otorgada exitosamente');
+            mostrarExito('La planta se ha otorgado exitosamente al empleado.');
             cargarAfiliados();
         } catch (error) {
             hideLoading();
             console.error('Error al otorgar planta:', error);
-            mostrarError('Error al procesar la planta');
+            mostrarError('No se pudo procesar el otorgamiento de planta. Por favor, intenta nuevamente.');
         }
     };
     
@@ -575,12 +780,12 @@ async function confirmarBaja() {
             });
 
             hideLoading();
-            mostrarExito('Afiliado dado de baja exitosamente');
+            mostrarExito('El empleado ha sido dado de baja exitosamente.');
             cargarAfiliados();
         } catch (error) {
             hideLoading();
             console.error('Error al dar de baja:', error);
-            mostrarError('Error al procesar la baja');
+            mostrarError('No se pudo procesar la baja del empleado. Por favor, intenta nuevamente.');
         }
     };
     
@@ -735,12 +940,12 @@ async function confirmarReingreso() {
             });
 
             hideLoading();
-            mostrarExito('Afiliado reingresado exitosamente');
+            mostrarExito('El empleado ha sido reingresado exitosamente.');
             cargarAfiliados();
         } catch (error) {
             hideLoading();
             console.error('Error al reingresar:', error);
-            mostrarError('Error al procesar el reingreso');
+            mostrarError('No se pudo procesar el reingreso del empleado. Por favor, intenta nuevamente.');
         }
     };
     
@@ -777,10 +982,47 @@ function hideLoading() {
     if (loading) loading.remove();
 }
 
+// Sistema de notificaciones elegante
 function mostrarExito(mensaje) {
-    alert('✓ ' + mensaje);
+    mostrarNotificacion(mensaje, 'success');
 }
 
 function mostrarError(mensaje) {
-    alert('✕ ' + mensaje);
+    mostrarNotificacion(mensaje, 'error');
+}
+
+function mostrarNotificacion(mensaje, tipo) {
+    // Crear elemento de notificación
+    const notificacion = document.createElement('div');
+    notificacion.className = `notificacion notificacion-${tipo}`;
+    
+    // Agregar contenido
+    notificacion.innerHTML = `
+        <div class="notificacion-contenido">
+            <div class="notificacion-icono">
+                ${tipo === 'success' ? 
+                    '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>' : 
+                    '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>'
+                }
+            </div>
+            <div class="notificacion-mensaje">${mensaje}</div>
+        </div>
+        <div class="notificacion-progreso"></div>
+    `;
+    
+    // Agregar al body
+    document.body.appendChild(notificacion);
+    
+    // Animar entrada
+    setTimeout(() => {
+        notificacion.classList.add('notificacion-visible');
+    }, 10);
+    
+    // Remover después de 4 segundos
+    setTimeout(() => {
+        notificacion.classList.remove('notificacion-visible');
+        setTimeout(() => {
+            notificacion.remove();
+        }, 300);
+    }, 4000);
 }

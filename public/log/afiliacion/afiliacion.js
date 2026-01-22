@@ -144,8 +144,12 @@ function showSuccessModal(message) {
     modal.style.display = 'block';
     modal.innerHTML = `
         <div class="modal-content">
-            <div class="success-icon">✓</div>
-            <h2>¡Solicitud Enviada!</h2>
+            <div class="success-icon">
+                <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+            </div>
+            <h2>Solicitud Enviada Exitosamente</h2>
             <p>${message}</p>
             <div class="modal-buttons">
                 <button class="btn-primary" onclick="location.reload()">Aceptar</button>
@@ -162,11 +166,17 @@ function showErrorModal(message) {
     modal.style.display = 'block';
     modal.innerHTML = `
         <div class="modal-content">
-            <div class="error-icon">✕</div>
-            <h2>Error</h2>
+            <div class="error-icon">
+                <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="15" y1="9" x2="9" y2="15"></line>
+                    <line x1="9" y1="9" x2="15" y2="15"></line>
+                </svg>
+            </div>
+            <h2>No se Pudo Completar la Solicitud</h2>
             <p>${message}</p>
             <div class="modal-buttons">
-                <button class="btn-primary" onclick="this.closest('.modal').remove()">Aceptar</button>
+                <button class="btn-primary" onclick="this.closest('.modal').remove()">Entendido</button>
             </div>
         </div>
     `;
@@ -185,18 +195,18 @@ document.getElementById('formAfiliacion').addEventListener('submit', async (e) =
     // Validaciones adicionales
     const curp = document.getElementById('curp').value;
     if (!validarCURP(curp)) {
-        showErrorModal('El CURP ingresado no tiene un formato válido. Debe tener 18 caracteres.');
+        showErrorModal('El CURP ingresado no es válido. Debe contener exactamente 18 caracteres en el formato correcto.');
         return;
     }
 
     const foto = document.getElementById('foto').files[0];
     if (!foto) {
-        showErrorModal('Debes seleccionar una fotografía.');
+        showErrorModal('Por favor, selecciona una fotografía para continuar con tu solicitud.');
         return;
     }
 
     if (!document.getElementById('aceptoTerminos').checked) {
-        showErrorModal('Debes aceptar los términos para continuar.');
+        showErrorModal('Debes leer y aceptar los términos y condiciones para poder continuar.');
         return;
     }
 
@@ -284,7 +294,7 @@ document.getElementById('formAfiliacion').addEventListener('submit', async (e) =
         await addDoc(collection(window.db, 'ingresos'), datosAfiliacion);
 
         hideLoading();
-        showSuccessModal('Tu solicitud de afiliación ha sido enviada exitosamente. El sindicato revisará tu solicitud y te contactará pronto.');
+        showSuccessModal('Tu solicitud de afiliación ha sido recibida exitosamente. El sindicato la revisará y te contactará a la brevedad posible.');
 
     } catch (error) {
         hideLoading();

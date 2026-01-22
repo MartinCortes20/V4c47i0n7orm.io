@@ -409,3 +409,30 @@ body {
     color: #f44336;
     margin-bottom: 20px;
 }
+
+/* Iconos de modal mejorados */
+.success-icon,
+.error-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.success-icon {
+    background: #d5f4e6;
+    color: #27ae60;
+}
+
+.error-icon {
+    background: #fadbd8;
+    color: #e74c3c;
+}
+
+.success-icon svg,
+.error-icon svg {
+    stroke-width: 3;
+}
