@@ -277,6 +277,7 @@ document.getElementById('formAfiliacion').addEventListener('submit', async (e) =
             fechaAlta: Timestamp.now(),
             status: 'A', // A = Alta
             fechaSolicitud: Timestamp.now(),
+            aprobado: null, // null = pendiente aprobación, true = aprobado, false = rechazado
             
             // Inicializar campos vacíos para futuras actualizaciones
             fechaBaja: null,

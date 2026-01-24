@@ -779,3 +779,75 @@ tbody tr:hover {
         transform: translateY(0);
     }
 }
+
+/* Pestañas de navegación */
+.tabs-navigation {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 30px;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.tab-btn {
+    padding: 15px 30px;
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    font-size: 16px;
+    font-weight: 600;
+    color: #7f8c8d;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+}
+
+.tab-btn:hover {
+    color: #2c3e50;
+    background: #f8f9fa;
+}
+
+.tab-btn.active {
+    color: #3498db;
+    border-bottom-color: #3498db;
+}
+
+.badge-count {
+    background: #e74c3c;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    margin-left: 8px;
+    font-weight: 700;
+}
+
+.stat-card-pending {
+    background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+}
+
+.stat-card-pending .stat-icon {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* Botones de aprobación/rechazo */
+.btn-aprobar {
+    background: #27ae60;
+    color: white;
+}
+
+.btn-aprobar:hover {
+    background: #229954;
+}
+
+.btn-rechazar {
+    background: #e74c3c;
+    color: white;
+}
+
+.btn-rechazar:hover {
+    background: #c0392b;
+}

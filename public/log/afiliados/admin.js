@@ -1,4 +1,4 @@
-import { collection, getDocs, doc, updateDoc, Timestamp, query, where } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js';
+import { collection, getDocs, getDoc, doc, updateDoc, deleteDoc, Timestamp, query, where } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js';
 
 let todosLosAfiliados = [];
 let afiliadoSeleccionado = null;
@@ -31,18 +31,58 @@ async function cargarAfiliados() {
         const querySnapshot = await getDocs(ingresosRef);
         
         todosLosAfiliados = [];
+        let pendientesCount = 0;
+        
         querySnapshot.forEach((doc) => {
-            todosLosAfiliados.push({
+            const data = doc.data();
+            const afiliado = {
                 id: doc.id,
-                ...doc.data()
-            });
+                ...data
+            };
+            
+            // Separar aprobados de pendientes
+            if (data.aprobado === null) {
+                pendientesCount++;
+            } else if (data.aprobado === true || data.aprobado === undefined) {
+                // Incluir aprobados y registros antiguos sin el campo aprobado
+                todosLosAfiliados.push(afiliado);
+            }
+            // Los rechazados (aprobado === false) ya fueron eliminados
         });
+
+        // Actualizar badge de pendientes
+        document.getElementById('badgePendientes').textContent = pendientesCount;
+        document.getElementById('totalPendientes').textContent = pendientesCount;
 
         actualizarEstadisticas();
         aplicarFiltros();
     } catch (error) {
         console.error('Error al cargar afiliados:', error);
         mostrarError('No se pudieron cargar los datos. Por favor, intenta nuevamente.');
+    }
+}
+
+// Cargar solicitudes pendientes
+async function cargarSolicitudesPendientes() {
+    try {
+        const ingresosRef = collection(window.db, 'ingresos');
+        const querySnapshot = await getDocs(ingresosRef);
+        
+        const pendientes = [];
+        querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            if (data.aprobado === null) {
+                pendientes.push({
+                    id: doc.id,
+                    ...data
+                });
+            }
+        });
+
+        mostrarSolicitudesPendientes(pendientes);
+    } catch (error) {
+        console.error('Error al cargar pendientes:', error);
+        mostrarError('No se pudieron cargar las solicitudes pendientes.');
     }
 }
 
@@ -1053,3 +1093,244 @@ function mostrarNotificacion(mensaje, tipo) {
         }, 300);
     }, 4000);
 }
+
+// Mostrar solicitudes pendientes
+function mostrarSolicitudesPendientes(pendientes) {
+    const tbody = document.getElementById('tablaPendientesBody');
+    document.getElementById('pendientesCount').textContent = `${pendientes.length} solicitud${pendientes.length !== 1 ? 'es' : ''}`;
+
+    if (pendientes.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" style="text-align: center; padding: 40px; color: #7f8c8d;">
+                    <div style="font-size: 48px; margin-bottom: 15px;">✅</div>
+                    <div style="font-size: 18px; font-weight: 600;">No hay solicitudes pendientes</div>
+                    <div style="font-size: 14px; margin-top: 10px;">Todas las solicitudes han sido revisadas.</div>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    tbody.innerHTML = pendientes.map(solicitud => {
+        const fotoSrc = solicitud.fotoBase64 || solicitud.fotoURL || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="50" height="50"%3E%3Crect fill="%23ddd" width="50" height="50"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%23999"%3E?%3C/text%3E%3C/svg%3E';
+        const fechaSolicitud = solicitud.fechaSolicitud ? formatearFecha(solicitud.fechaSolicitud.toDate()) : 'No especificada';
+
+        return `
+            <tr>
+                <td><img src="${fotoSrc}" alt="Foto" class="foto-mini"></td>
+                <td>${solicitud.nombreCompleto}</td>
+                <td>${solicitud.curp}</td>
+                <td>${solicitud.puesto}</td>
+                <td>${solicitud.telefono}</td>
+                <td>${fechaSolicitud}</td>
+                <td>
+                    <div class="action-buttons">
+                        <button class="btn-small btn-info" onclick="verDetallesSolicitud('${solicitud.id}')">Ver Detalles</button>
+                        <button class="btn-small btn-aprobar" onclick="aprobarSolicitud('${solicitud.id}')">Aprobar</button>
+                        <button class="btn-small btn-rechazar" onclick="rechazarSolicitud('${solicitud.id}')">Rechazar</button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+// Ver detalles de solicitud
+window.verDetallesSolicitud = async function(id) {
+    try {
+        // Buscar directamente en Firestore
+        const docRef = doc(window.db, 'ingresos', id);
+        const docSnap = await getDoc(docRef);
+        
+        if (!docSnap.exists()) {
+            mostrarError('No se encontró la solicitud.');
+            return;
+        }
+        
+        const solicitud = { id: docSnap.id, ...docSnap.data() };
+        
+        // Verificar que sea una solicitud pendiente
+        if (solicitud.aprobado !== null) {
+            mostrarError('Esta solicitud ya fue procesada.');
+            return;
+        }
+        
+        // Mostrar detalles usando el mismo formato que verDetalles()
+        const fotoSrc = solicitud.fotoBase64 || solicitud.fotoURL || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Crect fill="%23ddd" width="200" height="200"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%23999" font-size="48"%3E?%3C/text%3E%3C/svg%3E';
+        const tiempoActivo = '0 meses (pendiente de aprobación)';
+        
+        document.getElementById('detallesContent').innerHTML = `
+            <div class="alert-box alert-warning" style="margin-bottom: 20px;">
+                <strong>⚠️ Solicitud Pendiente de Aprobación</strong><br>
+                Esta persona aún no ha sido aprobada como afiliado. Revisa cuidadosamente la información antes de aprobar o rechazar.
+            </div>
+            
+            <div class="detail-photo">
+                <img src="${fotoSrc}" alt="Foto del solicitante">
+            </div>
+            <div class="detail-grid">
+                <div class="detail-item">
+                    <div class="detail-label">Nombre Completo</div>
+                    <div class="detail-value">${solicitud.nombreCompleto}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">CURP</div>
+                    <div class="detail-value">${solicitud.curp}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Lugar de Nacimiento</div>
+                    <div class="detail-value">${solicitud.lugarNacimiento || 'No especificado'}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Fecha de Nacimiento</div>
+                    <div class="detail-value">${solicitud.fechaNacimiento || 'No especificada'}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Domicilio</div>
+                    <div class="detail-value">${solicitud.domicilio || 'No especificado'}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Estado Civil</div>
+                    <div class="detail-value">${solicitud.estadoCivil}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Sexo</div>
+                    <div class="detail-value">${solicitud.sexo}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Teléfono</div>
+                    <div class="detail-value">${solicitud.telefono}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Escolaridad</div>
+                    <div class="detail-value">${solicitud.escolaridad}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Puesto</div>
+                    <div class="detail-value">${solicitud.puesto}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Salario Diario</div>
+                    <div class="detail-value">$${solicitud.salarioDiario ? solicitud.salarioDiario.toFixed(2) : '0.00'}</div>
+                </div>
+                ${solicitud.fechaIngresoEmpresa ? `
+                    <div class="detail-item" style="background: #ffe6e6; border-left-color: #e74c3c;">
+                        <div class="detail-label" style="color: #c0392b; font-weight: 700;">Fecha de Ingreso a la Empresa</div>
+                        <div class="detail-value" style="font-weight: 700; color: #e74c3c;">${formatearFechaString(solicitud.fechaIngresoEmpresa)}</div>
+                    </div>
+                ` : ''}
+                <div class="detail-item" style="background: #e3f2fd; border-left-color: #2196f3;">
+                    <div class="detail-label" style="color: #1976d2; font-weight: 700;">Fecha de Solicitud</div>
+                    <div class="detail-value" style="font-weight: 700; color: #2196f3;">${solicitud.fechaSolicitud ? formatearFecha(solicitud.fechaSolicitud.toDate()) : 'No disponible'}</div>
+                </div>
+            </div>
+            
+            <div class="modal-buttons" style="margin-top: 30px;">
+                <button class="btn-success" onclick="closeModal('modalDetalles'); aprobarSolicitud('${id}')">Aprobar Solicitud</button>
+                <button class="btn-danger" onclick="closeModal('modalDetalles'); rechazarSolicitud('${id}')">Rechazar Solicitud</button>
+                <button class="btn-secondary" onclick="closeModal('modalDetalles')">Cerrar</button>
+            </div>
+        `;
+        
+        document.querySelector('#modalDetalles .modal-header h2').textContent = 'Detalles de la Solicitud Pendiente';
+        openModal('modalDetalles');
+        
+    } catch (error) {
+        console.error('Error al ver detalles:', error);
+        mostrarError('No se pudieron cargar los detalles de la solicitud.');
+    }
+};
+
+// Aprobar solicitud
+window.aprobarSolicitud = async function(id) {
+    document.getElementById('confirmMessage').textContent = '¿Confirmas que deseas APROBAR esta solicitud? El afiliado aparecerá en el panel principal.';
+    openModal('modalConfirm');
+
+    document.getElementById('btnConfirmYes').onclick = async () => {
+        closeModal('modalConfirm');
+        
+        try {
+            showLoading();
+            const docRef = doc(window.db, 'ingresos', id);
+            await updateDoc(docRef, {
+                aprobado: true
+            });
+            
+            hideLoading();
+            mostrarExito('La solicitud ha sido aprobada exitosamente.');
+            
+            // Recargar ambas vistas
+            await cargarAfiliados();
+            await cargarSolicitudesPendientes();
+            
+        } catch (error) {
+            hideLoading();
+            console.error('Error al aprobar:', error);
+            mostrarError('No se pudo aprobar la solicitud. Por favor, intenta nuevamente.');
+        }
+    };
+
+    document.getElementById('btnConfirmNo').onclick = () => {
+        closeModal('modalConfirm');
+    };
+};
+
+// Rechazar solicitud
+window.rechazarSolicitud = async function(id) {
+    document.getElementById('confirmMessage').textContent = '¿Confirmas que deseas RECHAZAR esta solicitud? El registro será eliminado permanentemente de la base de datos.';
+    openModal('modalConfirm');
+
+    document.getElementById('btnConfirmYes').onclick = async () => {
+        closeModal('modalConfirm');
+        
+        try {
+            showLoading();
+            const docRef = doc(window.db, 'ingresos', id);
+            await deleteDoc(docRef);
+            
+            hideLoading();
+            mostrarExito('La solicitud ha sido rechazada y eliminada de la base de datos.');
+            
+            // Recargar ambas vistas
+            await cargarAfiliados();
+            await cargarSolicitudesPendientes();
+            
+        } catch (error) {
+            hideLoading();
+            console.error('Error al rechazar:', error);
+            mostrarError('No se pudo rechazar la solicitud. Por favor, intenta nuevamente.');
+        }
+    };
+
+    document.getElementById('btnConfirmNo').onclick = () => {
+        closeModal('modalConfirm');
+    };
+};
+
+// Manejar cambio de pestañas
+document.addEventListener('DOMContentLoaded', function() {
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    
+    tabButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const tab = this.dataset.tab;
+            
+            // Actualizar botones activos
+            tabButtons.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Mostrar/ocultar secciones
+            if (tab === 'afiliados') {
+                document.getElementById('filtrosAfiliados').classList.remove('hidden');
+                document.getElementById('seccionAfiliados').classList.remove('hidden');
+                document.getElementById('seccionPendientes').classList.add('hidden');
+            } else if (tab === 'pendientes') {
+                document.getElementById('filtrosAfiliados').classList.add('hidden');
+                document.getElementById('seccionAfiliados').classList.add('hidden');
+                document.getElementById('seccionPendientes').classList.remove('hidden');
+                cargarSolicitudesPendientes();
+            }
+        });
+    });
+});

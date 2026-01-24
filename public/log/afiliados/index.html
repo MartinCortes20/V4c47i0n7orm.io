@@ -47,6 +47,13 @@
                         <p>Con Planta</p>
                     </div>
                 </div>
+                <div class="stat-card stat-card-pending">
+                    <div class="stat-icon">⏳</div>
+                    <div class="stat-info">
+                        <h3 id="totalPendientes">0</h3>
+                        <p>Solicitudes Pendientes</p>
+                    </div>
+                </div>
                 <div class="stat-card">
                     <div class="stat-icon">🚫</div>
                     <div class="stat-info">
@@ -56,8 +63,18 @@
                 </div>
             </div>
 
+            <!-- Pestañas de navegación -->
+            <div class="tabs-navigation">
+                <button class="tab-btn active" data-tab="afiliados">
+                    Afiliados Aprobados
+                </button>
+                <button class="tab-btn" data-tab="pendientes">
+                    Solicitudes Pendientes <span class="badge-count" id="badgePendientes">0</span>
+                </button>
+            </div>
+
             <!-- Filtros y búsqueda -->
-            <div class="filters-section">
+            <div class="filters-section" id="filtrosAfiliados">
                 <h2>Filtros de Búsqueda</h2>
                 <div class="filters-grid">
                     <div class="filter-group">
@@ -130,9 +147,9 @@
             </div>
 
             <!-- Tabla de afiliados -->
-            <div class="table-section">
+            <div class="table-section" id="seccionAfiliados">
                 <div class="table-header">
-                    <h2>Lista de Afiliados</h2>
+                    <h2>Lista de Afiliados Aprobados</h2>
                     <div class="table-actions">
                         <span id="resultCount">0 resultados</span>
                     </div>
@@ -157,6 +174,40 @@
                                 <td colspan="8" class="loading-row">
                                     <div class="spinner-small"></div>
                                     Cargando datos...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tabla de solicitudes pendientes -->
+            <div class="table-section hidden" id="seccionPendientes">
+                <div class="table-header">
+                    <h2>Solicitudes Pendientes de Aprobación</h2>
+                    <div class="table-actions">
+                        <span id="pendientesCount">0 solicitudes</span>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table id="tablaPendientes">
+                        <thead>
+                            <tr>
+                                <th>Foto</th>
+                                <th>Nombre</th>
+                                <th>CURP</th>
+                                <th>Puesto</th>
+                                <th>Teléfono</th>
+                                <th>Fecha Solicitud</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaPendientesBody">
+                            <tr>
+                                <td colspan="7" class="loading-row">
+                                    <div class="spinner-small"></div>
+                                    Cargando solicitudes...
                                 </td>
                             </tr>
                         </tbody>
