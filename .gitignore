@@ -5,8 +5,8 @@
 .env.development
 
 # Firebase config auto-generado
-public/firebase-config.js
-firebase-config.js
+# public/firebase-config.js
+# firebase-config.js
 
 # Logs
 logs
