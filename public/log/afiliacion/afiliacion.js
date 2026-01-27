@@ -1,5 +1,8 @@
 import { collection, addDoc, query, where, getDocs, Timestamp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js';
 
+// ===== ENVOLVER TODO EN DOMContentLoaded =====
+document.addEventListener('DOMContentLoaded', () => {
+
 // Configurar fecha actual
 const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
 const hoy = new Date();
@@ -37,9 +40,21 @@ inputFoto.addEventListener('change', async (e) => {
     }
 });
 
-// Actualizar nombre de firma cuando se escribe el nombre
-document.getElementById('nombreCompleto').addEventListener('input', (e) => {
-    document.getElementById('nombreFirma').textContent = e.target.value.toUpperCase();
+// Actualizar nombre de firma cuando se escriben los nombres
+const actualizarFirma = () => {
+    const nombres = document.getElementById('nombres')?.value || '';
+    const paterno = document.getElementById('apellidoPaterno')?.value || '';
+    const materno = document.getElementById('apellidoMaterno')?.value || '';
+    const nombreCompleto = `${nombres} ${paterno} ${materno}`.trim().toUpperCase();
+    document.getElementById('nombreFirma').textContent = nombreCompleto;
+};
+
+// Agregar listeners a los 3 campos
+['nombres', 'apellidoPaterno', 'apellidoMaterno'].forEach(campoId => {
+    const elemento = document.getElementById(campoId);
+    if (elemento) {
+        elemento.addEventListener('input', actualizarFirma);
+    }
 });
 
 // Botón limpiar
@@ -104,23 +119,6 @@ async function convertToBase64(file) {
     });
 }
 
-// Función para validar CURP
-function validarCURP(curp) {
-    // Validación básica: debe tener 18 caracteres
-    if (!curp || curp.length !== 18) {
-        return false;
-    }
-    
-    // Convertir a mayúsculas
-    curp = curp.toUpperCase();
-    
-    // Patrón más flexible del CURP
-    // 4 letras + 6 números + H/M + 5 caracteres alfanuméricos + 2 números
-    const regex = /^[A-Z]{4}[0-9]{6}[HM][A-Z0-9]{5}[0-9A-Z]{2}$/;
-    
-    return regex.test(curp);
-}
-
 // Función para mostrar loading
 function showLoading() {
     const loadingDiv = document.createElement('div');
@@ -183,104 +181,178 @@ function showErrorModal(message) {
     document.body.appendChild(modal);
 }
 
-// Validar CURP completo con mensajes específicos
-function validarCURPCompleto(curp) {
-    // Convertir a mayúsculas
-    curp = curp.toUpperCase().trim();
+// ===== VALIDACIÓN COMPLETA DE CURP =====
+
+// Palabras altisonantes que se reemplazan por X
+const palabrasAltisonantes = [
+    'BACA', 'BAKA', 'BUEI', 'BUEY', 'CACA', 'CACO', 'CAGA', 'CAGO', 'CAKA', 'CAKO',
+    'COGE', 'COGI', 'COJA', 'COJE', 'COJI', 'COJO', 'COLA', 'CULO', 'FALO', 'FETO',
+    'GETA', 'GUEI', 'GUEY', 'JETA', 'JOTO', 'KACA', 'KACO', 'KAGA', 'KAGO', 'KAKA',
+    'KAKO', 'KOGE', 'KOGI', 'KOJA', 'KOJE', 'KOJI', 'KOJO', 'KOLA', 'KULO', 'LILO',
+    'LOCA', 'LOCO', 'LOKA', 'LOKO', 'MAME', 'MAMO', 'MEAR', 'MEAS', 'MEON', 'MIAR',
+    'MION', 'MOCO', 'MOKO', 'MULA', 'MULO', 'NACA', 'NACO', 'PEDA', 'PEDO', 'PENE',
+    'PIPI', 'PITO', 'POPO', 'PUTA', 'PUTO', 'QULO', 'RATA', 'ROBA', 'ROBE', 'ROBO',
+    'RUIN', 'SENO', 'TETA', 'VACA', 'VAGA', 'VAGO', 'VAKA', 'VUEI', 'VUEY', 'WUEI', 'WUEY'
+];
+
+// Códigos de estados válidos
+const estadosValidos = [
+    'AS', 'BC', 'BS', 'CC', 'CS', 'CH', 'CL', 'CM', 'DF', 'DG', 
+    'GT', 'GR', 'HG', 'JC', 'MC', 'MN', 'MS', 'NT', 'NL', 'OC', 
+    'PL', 'QT', 'QR', 'SP', 'SL', 'SR', 'TC', 'TS', 'TL', 'VZ', 
+    'YN', 'ZS', 'NE'
+];
+
+// Función para validar fecha completa (incluyendo días según mes)
+function validarFecha(anio, mes, dia) {
+    // Convertir año de 2 dígitos a 4 dígitos
+    const anioCompleto = parseInt(anio) <= new Date().getFullYear() % 100 
+        ? 2000 + parseInt(anio) 
+        : 1900 + parseInt(anio);
     
-    // 1. Verificar longitud
-    if (curp.length !== 18) {
-        return {
-            valido: false,
-            error: 'longitud incorrecta (debe tener exactamente 18 caracteres)'
-        };
+    const mesNum = parseInt(mes);
+    const diaNum = parseInt(dia);
+    
+    // Validar mes
+    if (mesNum < 1 || mesNum > 12) {
+        return { valido: false, error: `el mes "${mes}" no es válido (debe estar entre 01 y 12)` };
     }
     
-    // 2. Verificar formato general con expresión regular
-    const regexCURP = /^[A-Z]{1}[AEIOUX]{1}[A-Z]{2}[0-9]{2}(0[1-9]|1[0-2])(0[1-9]|1[0-9]|2[0-9]|3[0-1])[HM]{1}(AS|BC|BS|CC|CS|CH|CL|CM|DF|DG|GT|GR|HG|JC|MC|MN|MS|NT|NL|OC|PL|QT|QR|SP|SL|SR|TC|TS|TL|VZ|YN|ZS|NE)[B-DF-HJ-NP-TV-Z]{3}[0-9A-Z]{1}[0-9]{1}$/;
+    // Días por mes
+    const diasPorMes = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
     
-    if (!regexCURP.test(curp)) {
-        // Verificaciones específicas para dar mensaje claro
-        
-        // Verificar si tiene números donde deberían ser letras
-        const primeraParte = curp.substring(0, 4);
-        if (/[0-9]/.test(primeraParte)) {
-            return {
-                valido: false,
-                error: 'las primeras 4 letras no deben contener números (verifica que no confundas O con 0)'
-            };
-        }
-        
-        // Verificar fecha (posiciones 4-9)
-        const año = curp.substring(4, 6);
-        const mes = curp.substring(6, 8);
-        const dia = curp.substring(8, 10);
-        
-        if (!/^[0-9]{2}$/.test(año) || !/^[0-9]{2}$/.test(mes) || !/^[0-9]{2}$/.test(dia)) {
-            return {
-                valido: false,
-                error: 'la fecha de nacimiento (posiciones 5-10) debe contener solo números'
-            };
-        }
-        
-        const mesNum = parseInt(mes);
-        const diaNum = parseInt(dia);
-        
-        if (mesNum < 1 || mesNum > 12) {
-            return {
-                valido: false,
-                error: `el mes "${mes}" no es válido (debe estar entre 01 y 12)`
-            };
-        }
-        
-        if (diaNum < 1 || diaNum > 31) {
-            return {
-                valido: false,
-                error: `el día "${dia}" no es válido (debe estar entre 01 y 31)`
-            };
-        }
-        
-        // Verificar sexo (posición 10)
-        const sexo = curp.charAt(10);
-        if (sexo !== 'H' && sexo !== 'M') {
-            return {
-                valido: false,
-                error: `el carácter de sexo "${sexo}" no es válido (debe ser H o M)`
-            };
-        }
-        
-        // Verificar estado (posiciones 11-12)
-        const estado = curp.substring(11, 13);
-        const estadosValidos = ['AS','BC','BS','CC','CS','CH','CL','CM','DF','DG','GT','GR','HG','JC','MC','MN','MS','NT','NL','OC','PL','QT','QR','SP','SL','SR','TC','TS','TL','VZ','YN','ZS','NE'];
-        
-        if (!estadosValidos.includes(estado)) {
-            return {
-                valido: false,
-                error: `el código de estado "${estado}" no es válido`
-            };
-        }
-        
-        // Verificar consonantes internas (posiciones 13-15)
-        const consonantes = curp.substring(13, 16);
-        if (!/^[B-DF-HJ-NP-TV-Z]{3}$/.test(consonantes)) {
-            return {
-                valido: false,
-                error: 'las consonantes internas (posiciones 14-16) no son válidas (verifica que no confundas letras con números)'
-            };
-        }
-        
-        // Si llegamos aquí, es otro error de formato
-        return {
-            valido: false,
-            error: 'formato general incorrecto (verifica cada sección de tu CURP)'
+    // Año bisiesto
+    if (anioCompleto % 4 === 0 && (anioCompleto % 100 !== 0 || anioCompleto % 400 === 0)) {
+        diasPorMes[1] = 29;
+    }
+    
+    // Validar día según el mes
+    if (diaNum < 1 || diaNum > diasPorMes[mesNum - 1]) {
+        return { 
+            valido: false, 
+            error: `el día "${dia}" no es válido para el mes ${mes} (debe estar entre 01 y ${diasPorMes[mesNum - 1].toString().padStart(2, '0')})` 
         };
     }
     
     return { valido: true };
 }
 
-// Convertir automáticamente a mayúsculas en tiempo real
-const camposMayusculas = ['nombres', 'apellidoPaterno', 'apellidoMaterno', 'lugarNacimiento', 'domicilio', 'puesto'];
+// Validar CURP completo con todas las reglas
+function validarCURPCompleto(curp) {
+    // Convertir a mayúsculas y eliminar espacios
+    curp = curp.toUpperCase().trim();
+    
+    // 1. Verificar longitud exacta
+    if (curp.length !== 18) {
+        return {
+            valido: false,
+            error: `longitud incorrecta (tiene ${curp.length} caracteres, debe tener exactamente 18)`
+        };
+    }
+    
+    // 2. Verificar patrón general básico
+    const patronBasico = /^[A-Z]{4}[0-9]{6}[HM][A-Z]{2}[B-DF-HJ-NP-TV-Z]{3}[0-9A-Z]{2}$/;
+    if (!patronBasico.test(curp)) {
+        // Desglosar errores específicos
+        
+        // Primeros 4 caracteres (letras)
+        const primeros4 = curp.substring(0, 4);
+        if (!/^[A-Z]{4}$/.test(primeros4)) {
+            return {
+                valido: false,
+                error: `los primeros 4 caracteres "${primeros4}" deben ser solo letras (verifica que no haya números)`
+            };
+        }
+        
+        // Fecha (posiciones 5-10)
+        const fecha = curp.substring(4, 10);
+        if (!/^[0-9]{6}$/.test(fecha)) {
+            return {
+                valido: false,
+                error: `la fecha de nacimiento (posiciones 5-10: "${fecha}") debe contener solo 6 números en formato AAMMDD`
+            };
+        }
+        
+        // Sexo (posición 11)
+        const sexo = curp[10];
+        if (sexo !== 'H' && sexo !== 'M') {
+            return {
+                valido: false,
+                error: `el carácter de sexo "${sexo}" (posición 11) no es válido, debe ser H (Hombre) o M (Mujer)`
+            };
+        }
+        
+        // Estado (posiciones 12-13)
+        const estado = curp.substring(11, 13);
+        if (!estadosValidos.includes(estado)) {
+            return {
+                valido: false,
+                error: `el código de estado "${estado}" (posiciones 12-13) no es válido. Ejemplos válidos: DF, NL, JC, etc.`
+            };
+        }
+        
+        // Consonantes internas (posiciones 14-16)
+        const consonantes = curp.substring(13, 16);
+        if (!/^[B-DF-HJ-NP-TV-Z]{3}$/.test(consonantes)) {
+            return {
+                valido: false,
+                error: `las consonantes internas "${consonantes}" (posiciones 14-16) no son válidas (no pueden ser vocales ni Ñ)`
+            };
+        }
+        
+        // Homoclave (posiciones 17-18)
+        const homoclave = curp.substring(16, 18);
+        if (!/^[0-9A-Z]{2}$/.test(homoclave)) {
+            return {
+                valido: false,
+                error: `la homoclave "${homoclave}" (últimos 2 caracteres) debe ser alfanumérica`
+            };
+        }
+        
+        // Error genérico si no se detectó el problema específico
+        return {
+            valido: false,
+            error: 'formato general incorrecto, verifica cada sección de tu CURP'
+        };
+    }
+    
+    // 3. Validar fecha de nacimiento completa
+    const anio = curp.substring(4, 6);
+    const mes = curp.substring(6, 8);
+    const dia = curp.substring(8, 10);
+    
+    const validacionFecha = validarFecha(anio, mes, dia);
+    if (!validacionFecha.valido) {
+        return validacionFecha;
+    }
+    
+    // 4. Verificar si contiene palabra altisonante
+    const primeros4 = curp.substring(0, 4);
+    if (palabrasAltisonantes.includes(primeros4)) {
+        // Si detectamos palabra altisonante pero no tiene X en posición 2
+        if (curp[1] !== 'X') {
+            return {
+                valido: false,
+                error: `los primeros 4 caracteres "${primeros4}" forman una palabra no permitida. En CURPs oficiales esto se corrige con una "X" en la segunda posición`
+            };
+        }
+    }
+    
+    // 5. Validar estado
+    const estado = curp.substring(11, 13);
+    if (!estadosValidos.includes(estado)) {
+        return {
+            valido: false,
+            error: `el código de estado "${estado}" no corresponde a ninguna entidad federativa válida`
+        };
+    }
+    
+    // 6. Todo correcto
+    return { valido: true };
+}
+
+// Convertir automáticamente a mayúsculas en tiempo real (SOLO INPUTS DE TEXTO)
+const camposMayusculas = ['nombres', 'apellidoPaterno', 'apellidoMaterno', 'lugarNacimiento', 'domicilio'];
 
 camposMayusculas.forEach(campoId => {
     const elemento = document.getElementById(campoId);
@@ -293,7 +365,7 @@ camposMayusculas.forEach(campoId => {
     }
 });
 
-// Validar CURP en tiempo real con mensaje visual
+// Validar CURP en tiempo real con mensaje visual mejorado
 document.getElementById('curp').addEventListener('input', (e) => {
     const input = e.target;
     input.value = input.value.toUpperCase();
@@ -309,18 +381,22 @@ document.getElementById('curp').addEventListener('input', (e) => {
         const validacion = validarCURPCompleto(input.value);
         
         if (!validacion.valido) {
-            // Mostrar mensaje de error
+            // Mostrar mensaje de error detallado
             const errorDiv = document.createElement('div');
             errorDiv.className = 'curp-error-message';
             errorDiv.innerHTML = `
-                <strong>⚠️ Verifica tu CURP</strong><br>
-                No cumple con: ${validacion.error}
+                <strong>⚠️ Tu CURP no es válida</strong><br>
+                ${validacion.error}
             `;
             input.parentElement.appendChild(errorDiv);
             input.style.borderColor = '#e74c3c';
         } else {
+            // CURP válida
             input.style.borderColor = '#27ae60';
         }
+    } else if (input.value.length > 0) {
+        // Mostrar progreso
+        input.style.borderColor = '#ffa500';
     } else {
         input.style.borderColor = '';
     }
@@ -335,7 +411,7 @@ document.getElementById('formAfiliacion').addEventListener('submit', async (e) =
     const validacionCURP = validarCURPCompleto(curp);
     
     if (!validacionCURP.valido) {
-        showErrorModal(`Tu CURP no es válido:<br><br><strong>No cumple con:</strong> ${validacionCURP.error}<br><br>Por favor verifica y corrige tu CURP.`);
+        showErrorModal(`Tu CURP no es válida:<br><br><strong>Problema detectado:</strong><br>${validacionCURP.error}<br><br>Por favor verifica y corrige tu CURP.`);
         return;
     }
 
@@ -398,6 +474,9 @@ document.getElementById('formAfiliacion').addEventListener('submit', async (e) =
         const apellidoMaterno = document.getElementById('apellidoMaterno').value.trim().toUpperCase();
         const nombreCompleto = `${nombres} ${apellidoPaterno} ${apellidoMaterno}`;
 
+        // Obtener valor del select de puesto (ya viene en el formato correcto del HTML)
+        const puestoSeleccionado = document.getElementById('puesto').value;
+
         // Preparar datos para guardar
         const datosAfiliacion = {
             // Datos personales (TODO EN MAYÚSCULAS)
@@ -412,10 +491,10 @@ document.getElementById('formAfiliacion').addEventListener('submit', async (e) =
             escolaridad: document.getElementById('escolaridad').value,
             fotoBase64: photoBase64,
 
-            // Datos laborales (TODO EN MAYÚSCULAS)
+            // Datos laborales
             empresa: 'COSBEL S.A. de C.V.',
             giroEmpresa: 'Cosméticos y Productos de Belleza',
-            puesto: document.getElementById('puesto').value.toUpperCase(),
+            puesto: puestoSeleccionado,
             salarioDiario: parseFloat(document.getElementById('salarioDiario').value),
             fechaIngresoEmpresa: document.getElementById('fechaIngresoEmpresa').value,
 
@@ -448,4 +527,7 @@ document.getElementById('formAfiliacion').addEventListener('submit', async (e) =
         console.error('Error al enviar la solicitud:', error);
         showErrorModal('Ocurrió un error al enviar tu solicitud. Por favor, intenta nuevamente. Error: ' + error.message);
     }
+});
+
+// ===== FIN DEL DOMContentLoaded =====
 });
