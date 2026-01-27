@@ -1,17 +1,5 @@
-// Configuración de Firebase
-const firebaseConfig = {
-    apiKey: "AIzaSyCcBqpSXsz_wqm3xyg0NSJYnvQTK0NhkXg",
-    authDomain: "formatovacaciones.firebaseapp.com",
-    projectId: "formatovacaciones",
-    storageBucket: "formatovacaciones.firebasestorage.app",
-    messagingSenderId: "753669687689",
-    appId: "1:753669687689:web:b37af5de6ba6b1391ef958",
-    measurementId: "G-LMKRM8VKM7"
-};
-
-// Inicializar Firebase
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+// Importar configuración de Firebase desde archivo centralizado
+import { db } from '../firebase-config.js';
 
 // Variables globales
 let numEmpleadoExiste = false;

@@ -851,3 +851,98 @@ tbody tr:hover {
 .btn-rechazar:hover {
     background: #c0392b;
 }
+
+/* Tarjetas de estadísticas por sexo */
+.stat-card-hombres {
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+}
+
+.stat-card-hombres .stat-icon {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.stat-card-mujeres {
+    background: linear-gradient(135deg, #e91e63 0%, #c2185b 100%);
+}
+
+.stat-card-mujeres .stat-icon {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* Botón flotante de utilidades */
+.floating-utils-btn {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(155, 89, 182, 0.4);
+    transition: all 0.3s;
+    z-index: 999;
+}
+
+.floating-utils-btn:hover {
+    transform: scale(1.1) rotate(90deg);
+    box-shadow: 0 6px 20px rgba(155, 89, 182, 0.6);
+}
+
+/* Secciones de utilidades */
+.util-section {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px 0;
+    border-left: 4px solid #9b59b6;
+}
+
+.util-section h3 {
+    margin-top: 0;
+    color: #2c3e50;
+    font-size: 18px;
+}
+
+.util-section p {
+    color: #7f8c8d;
+    margin: 10px 0 15px 0;
+    line-height: 1.6;
+}
+
+.btn-danger {
+    background: #e74c3c;
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #c0392b;
+}
+
+@media (max-width: 768px) {
+    .floating-utils-btn {
+        bottom: 20px;
+        right: 20px;
+        width: 50px;
+        height: 50px;
+        font-size: 24px;
+    }
+}
+
+/* Botón de eliminar de base de datos */
+.btn-delete {
+    background: #95a5a6;
+    color: white;
+    padding: 6px 10px;
+    font-size: 16px;
+    transition: all 0.3s;
+}
+
+.btn-delete:hover {
+    background: #e74c3c;
+    transform: scale(1.1);
+}

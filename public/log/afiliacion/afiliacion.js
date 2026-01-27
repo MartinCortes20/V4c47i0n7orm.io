@@ -183,9 +183,147 @@ function showErrorModal(message) {
     document.body.appendChild(modal);
 }
 
-// Validar CURP en tiempo real
+// Validar CURP completo con mensajes específicos
+function validarCURPCompleto(curp) {
+    // Convertir a mayúsculas
+    curp = curp.toUpperCase().trim();
+    
+    // 1. Verificar longitud
+    if (curp.length !== 18) {
+        return {
+            valido: false,
+            error: 'longitud incorrecta (debe tener exactamente 18 caracteres)'
+        };
+    }
+    
+    // 2. Verificar formato general con expresión regular
+    const regexCURP = /^[A-Z]{1}[AEIOUX]{1}[A-Z]{2}[0-9]{2}(0[1-9]|1[0-2])(0[1-9]|1[0-9]|2[0-9]|3[0-1])[HM]{1}(AS|BC|BS|CC|CS|CH|CL|CM|DF|DG|GT|GR|HG|JC|MC|MN|MS|NT|NL|OC|PL|QT|QR|SP|SL|SR|TC|TS|TL|VZ|YN|ZS|NE)[B-DF-HJ-NP-TV-Z]{3}[0-9A-Z]{1}[0-9]{1}$/;
+    
+    if (!regexCURP.test(curp)) {
+        // Verificaciones específicas para dar mensaje claro
+        
+        // Verificar si tiene números donde deberían ser letras
+        const primeraParte = curp.substring(0, 4);
+        if (/[0-9]/.test(primeraParte)) {
+            return {
+                valido: false,
+                error: 'las primeras 4 letras no deben contener números (verifica que no confundas O con 0)'
+            };
+        }
+        
+        // Verificar fecha (posiciones 4-9)
+        const año = curp.substring(4, 6);
+        const mes = curp.substring(6, 8);
+        const dia = curp.substring(8, 10);
+        
+        if (!/^[0-9]{2}$/.test(año) || !/^[0-9]{2}$/.test(mes) || !/^[0-9]{2}$/.test(dia)) {
+            return {
+                valido: false,
+                error: 'la fecha de nacimiento (posiciones 5-10) debe contener solo números'
+            };
+        }
+        
+        const mesNum = parseInt(mes);
+        const diaNum = parseInt(dia);
+        
+        if (mesNum < 1 || mesNum > 12) {
+            return {
+                valido: false,
+                error: `el mes "${mes}" no es válido (debe estar entre 01 y 12)`
+            };
+        }
+        
+        if (diaNum < 1 || diaNum > 31) {
+            return {
+                valido: false,
+                error: `el día "${dia}" no es válido (debe estar entre 01 y 31)`
+            };
+        }
+        
+        // Verificar sexo (posición 10)
+        const sexo = curp.charAt(10);
+        if (sexo !== 'H' && sexo !== 'M') {
+            return {
+                valido: false,
+                error: `el carácter de sexo "${sexo}" no es válido (debe ser H o M)`
+            };
+        }
+        
+        // Verificar estado (posiciones 11-12)
+        const estado = curp.substring(11, 13);
+        const estadosValidos = ['AS','BC','BS','CC','CS','CH','CL','CM','DF','DG','GT','GR','HG','JC','MC','MN','MS','NT','NL','OC','PL','QT','QR','SP','SL','SR','TC','TS','TL','VZ','YN','ZS','NE'];
+        
+        if (!estadosValidos.includes(estado)) {
+            return {
+                valido: false,
+                error: `el código de estado "${estado}" no es válido`
+            };
+        }
+        
+        // Verificar consonantes internas (posiciones 13-15)
+        const consonantes = curp.substring(13, 16);
+        if (!/^[B-DF-HJ-NP-TV-Z]{3}$/.test(consonantes)) {
+            return {
+                valido: false,
+                error: 'las consonantes internas (posiciones 14-16) no son válidas (verifica que no confundas letras con números)'
+            };
+        }
+        
+        // Si llegamos aquí, es otro error de formato
+        return {
+            valido: false,
+            error: 'formato general incorrecto (verifica cada sección de tu CURP)'
+        };
+    }
+    
+    return { valido: true };
+}
+
+// Convertir automáticamente a mayúsculas en tiempo real
+const camposMayusculas = ['nombres', 'apellidoPaterno', 'apellidoMaterno', 'lugarNacimiento', 'domicilio', 'puesto'];
+
+camposMayusculas.forEach(campoId => {
+    const elemento = document.getElementById(campoId);
+    if (elemento) {
+        elemento.addEventListener('input', (e) => {
+            const cursorPos = e.target.selectionStart;
+            e.target.value = e.target.value.toUpperCase();
+            e.target.setSelectionRange(cursorPos, cursorPos);
+        });
+    }
+});
+
+// Validar CURP en tiempo real con mensaje visual
 document.getElementById('curp').addEventListener('input', (e) => {
-    e.target.value = e.target.value.toUpperCase();
+    const input = e.target;
+    input.value = input.value.toUpperCase();
+    
+    // Remover mensaje de error previo si existe
+    const errorPrevio = input.parentElement.querySelector('.curp-error-message');
+    if (errorPrevio) {
+        errorPrevio.remove();
+    }
+    
+    // Si tiene 18 caracteres, validar
+    if (input.value.length === 18) {
+        const validacion = validarCURPCompleto(input.value);
+        
+        if (!validacion.valido) {
+            // Mostrar mensaje de error
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'curp-error-message';
+            errorDiv.innerHTML = `
+                <strong>⚠️ Verifica tu CURP</strong><br>
+                No cumple con: ${validacion.error}
+            `;
+            input.parentElement.appendChild(errorDiv);
+            input.style.borderColor = '#e74c3c';
+        } else {
+            input.style.borderColor = '#27ae60';
+        }
+    } else {
+        input.style.borderColor = '';
+    }
 });
 
 // Envío del formulario
@@ -193,9 +331,11 @@ document.getElementById('formAfiliacion').addEventListener('submit', async (e) =
     e.preventDefault();
 
     // Validaciones adicionales
-    const curp = document.getElementById('curp').value;
-    if (!validarCURP(curp)) {
-        showErrorModal('El CURP ingresado no es válido. Debe contener exactamente 18 caracteres en el formato correcto.');
+    const curp = document.getElementById('curp').value.toUpperCase();
+    const validacionCURP = validarCURPCompleto(curp);
+    
+    if (!validacionCURP.valido) {
+        showErrorModal(`Tu CURP no es válido:<br><br><strong>No cumple con:</strong> ${validacionCURP.error}<br><br>Por favor verifica y corrige tu CURP.`);
         return;
     }
 
@@ -252,24 +392,30 @@ document.getElementById('formAfiliacion').addEventListener('submit', async (e) =
         const resizedPhoto = await resizeImage(foto);
         const photoBase64 = await convertToBase64(resizedPhoto);
 
+        // Concatenar nombre completo desde los 3 campos separados
+        const nombres = document.getElementById('nombres').value.trim().toUpperCase();
+        const apellidoPaterno = document.getElementById('apellidoPaterno').value.trim().toUpperCase();
+        const apellidoMaterno = document.getElementById('apellidoMaterno').value.trim().toUpperCase();
+        const nombreCompleto = `${nombres} ${apellidoPaterno} ${apellidoMaterno}`;
+
         // Preparar datos para guardar
         const datosAfiliacion = {
-            // Datos personales
-            nombreCompleto: document.getElementById('nombreCompleto').value.trim(),
-            curp: curp,
-            lugarNacimiento: document.getElementById('lugarNacimiento').value.trim(),
+            // Datos personales (TODO EN MAYÚSCULAS)
+            nombreCompleto: nombreCompleto,
+            curp: curp.toUpperCase(),
+            lugarNacimiento: document.getElementById('lugarNacimiento').value.trim().toUpperCase(),
             fechaNacimiento: document.getElementById('fechaNacimiento').value,
-            domicilio: document.getElementById('domicilio').value.trim(),
+            domicilio: document.getElementById('domicilio').value.trim().toUpperCase(),
             estadoCivil: document.getElementById('estadoCivil').value,
             sexo: document.getElementById('sexo').value,
             telefono: document.getElementById('telefono').value,
             escolaridad: document.getElementById('escolaridad').value,
             fotoBase64: photoBase64,
 
-            // Datos laborales
+            // Datos laborales (TODO EN MAYÚSCULAS)
             empresa: 'COSBEL S.A. de C.V.',
             giroEmpresa: 'Cosméticos y Productos de Belleza',
-            puesto: document.getElementById('puesto').value,
+            puesto: document.getElementById('puesto').value.toUpperCase(),
             salarioDiario: parseFloat(document.getElementById('salarioDiario').value),
             fechaIngresoEmpresa: document.getElementById('fechaIngresoEmpresa').value,
 

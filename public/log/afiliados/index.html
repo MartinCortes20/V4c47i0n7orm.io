@@ -61,6 +61,20 @@
                         <p>Despidos</p>
                     </div>
                 </div>
+                <div class="stat-card stat-card-hombres">
+                    <div class="stat-icon">👨</div>
+                    <div class="stat-info">
+                        <h3 id="totalHombres">0</h3>
+                        <p>Hombres</p>
+                    </div>
+                </div>
+                <div class="stat-card stat-card-mujeres">
+                    <div class="stat-icon">👩</div>
+                    <div class="stat-info">
+                        <h3 id="totalMujeres">0</h3>
+                        <p>Mujeres</p>
+                    </div>
+                </div>
             </div>
 
             <!-- Pestañas de navegación -->
@@ -92,6 +106,15 @@
                             <option value="AP">Alta Planta (AP)</option>
                             <option value="D">Despidos (D)</option>
                             <option value="PUEDE_PLANTA">Ya cumplieron 24+ meses (referencia)</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Sexo:</label>
+                        <select id="filterSexo">
+                            <option value="">Todos</option>
+                            <option value="Masculino">Hombres</option>
+                            <option value="Femenino">Mujeres</option>
                         </select>
                     </div>
 
@@ -132,10 +155,10 @@
                     <div class="filter-group">
                         <label>Ordenar por:</label>
                         <select id="sortBy">
+                            <option value="nombre-asc" selected>Nombre (A-Z)</option>
+                            <option value="nombre-desc">Nombre (Z-A)</option>
                             <option value="fechaAlta-desc">Fecha de alta (más reciente)</option>
                             <option value="fechaAlta-asc">Fecha de alta (más antigua)</option>
-                            <option value="nombre-asc">Nombre (A-Z)</option>
-                            <option value="nombre-desc">Nombre (Z-A)</option>
                         </select>
                     </div>
                 </div>
@@ -165,7 +188,7 @@
                                 <th>Puesto</th>
                                 <th>Estado</th>
                                 <th>Fecha Ingreso Empresa</th>
-                                <th>Tiempo Activo</th>
+                                <th>Antigüedad</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
@@ -212,6 +235,51 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botón flotante de utilidades (solo visible para admin) -->
+    <div class="floating-utils-btn" id="btnUtilidades" title="Utilidades de administración">
+        ⚙️
+    </div>
+
+    <!-- Modal de utilidades -->
+    <div id="modalUtilidades" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>⚙️ Utilidades de Administración</h2>
+                <button class="close-btn" onclick="closeModal('modalUtilidades')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="alert-box alert-info">
+                    <strong>Herramientas de Mantenimiento</strong><br>
+                    Estas funciones son para mantenimiento de la base de datos. Úsalas con precaución.
+                </div>
+
+                <div class="util-section">
+                    <h3>🔄 Convertir Registros a Mayúsculas</h3>
+                    <p>Convierte todos los campos de texto de los registros existentes a mayúsculas para mantener consistencia en la base de datos.</p>
+                    <button class="btn-primary" onclick="convertirTodoAMayusculas()">
+                        Convertir Registros Existentes
+                    </button>
+                </div>
+
+                <div class="util-section">
+                    <h3>🗑️ Eliminar Duplicados por CURP</h3>
+                    <p>Busca y elimina registros duplicados basándose en el CURP. Solo mantiene el registro más reciente de cada persona.</p>
+                    <button class="btn-danger" onclick="eliminarDuplicados()">
+                        Buscar y Eliminar Duplicados
+                    </button>
+                </div>
+
+                <div class="util-section">
+                    <h3>📊 Generar Reporte de Duplicados</h3>
+                    <p>Muestra una lista de CURPs duplicados sin eliminarlos (solo para revisión).</p>
+                    <button class="btn-secondary" onclick="reportarDuplicados()">
+                        Ver Reporte de Duplicados
+                    </button>
                 </div>
             </div>
         </div>
@@ -437,23 +505,11 @@
         </div>
     </div>
 
+
     <!-- Firebase SDK -->
     <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js';
-        import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js';
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyCcBqpSXsz_wqm3xyg0NSJYnvQTK0NhkXg",
-            authDomain: "formatovacaciones.firebaseapp.com",
-            projectId: "formatovacaciones",
-            storageBucket: "formatovacaciones.firebasestorage.app",
-            messagingSenderId: "753669687689",
-            appId: "1:753669687689:web:b37af5de6ba6b1391ef958",
-            measurementId: "G-LMKRM8VKM7"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        window.db = getFirestore(app);
+        import { db } from '../../firebase-config.js';
+        window.db = db;
     </script>
     
     <script type="module" src="admin.js"></script>

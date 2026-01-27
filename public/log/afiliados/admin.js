@@ -93,18 +93,23 @@ function actualizarEstadisticas() {
     const reingresos = todosLosAfiliados.filter(a => a.status === 'R').length;
     const despidos = todosLosAfiliados.filter(a => a.status === 'D').length;
     const planta = todosLosAfiliados.filter(a => a.status === 'AP').length;
+    const hombres = todosLosAfiliados.filter(a => a.sexo === 'Masculino').length;
+    const mujeres = todosLosAfiliados.filter(a => a.sexo === 'Femenino').length;
 
     document.getElementById('totalActivos').textContent = activos;
     document.getElementById('totalBajas').textContent = bajas;
     document.getElementById('totalReingresos').textContent = reingresos;
     document.getElementById('totalDespidos').textContent = despidos;
     document.getElementById('totalPlanta').textContent = planta;
+    document.getElementById('totalHombres').textContent = hombres;
+    document.getElementById('totalMujeres').textContent = mujeres;
 }
 
 // Aplicar filtros
 function aplicarFiltros() {
     const searchTerm = document.getElementById('searchInput').value.toLowerCase();
     const filterStatus = document.getElementById('filterStatus').value;
+    const filterSexo = document.getElementById('filterSexo').value;
     const filterMes = document.getElementById('filterMes').value;
     const filterAnio = document.getElementById('filterAnio').value;
     const filterTiempoBaja = document.getElementById('filterTiempoBaja').value;
@@ -128,6 +133,11 @@ function aplicarFiltros() {
         } else {
             filtrados = filtrados.filter(a => a.status === filterStatus);
         }
+    }
+
+    // Filtro de sexo
+    if (filterSexo) {
+        filtrados = filtrados.filter(a => a.sexo === filterSexo);
     }
 
     // Filtro de mes
@@ -176,7 +186,8 @@ function aplicarFiltros() {
             case 'nombre-desc':
                 return b.nombreCompleto.localeCompare(a.nombreCompleto);
             default:
-                return 0;
+                // Por defecto: ordenar alfabéticamente por nombre (A-Z)
+                return a.nombreCompleto.localeCompare(b.nombreCompleto);
         }
     });
 
@@ -196,10 +207,11 @@ function aplicarFiltros() {
 function limpiarFiltros() {
     document.getElementById('searchInput').value = '';
     document.getElementById('filterStatus').value = '';
+    document.getElementById('filterSexo').value = '';
     document.getElementById('filterMes').value = '';
     document.getElementById('filterAnio').value = '';
     document.getElementById('filterTiempoBaja').value = '';
-    document.getElementById('sortBy').value = 'fechaAlta-desc';
+    document.getElementById('sortBy').value = 'nombre-asc';
     aplicarFiltros();
 }
 
@@ -251,6 +263,9 @@ function mostrarAfiliados(afiliados) {
                         ${(afiliado.status === 'A' || afiliado.status === 'R') && afiliado.status !== 'AP' ? 
                             `<button class="btn-small btn-planta" onclick="mostrarModalPlanta('${afiliado.id}')">Otorgar Planta</button>` 
                             : ''}
+                        <button class="btn-small btn-delete" onclick="eliminarDeBaseDatos('${afiliado.id}', '${afiliado.nombreCompleto}', '${afiliado.curp}')" title="Eliminar permanentemente">
+                            🗑️
+                        </button>
                     </div>
                 </td>
             </tr>
@@ -260,17 +275,27 @@ function mostrarAfiliados(afiliados) {
 
 // Calcular tiempo activo
 function calcularTiempoActivo(afiliado) {
-    let mesesTotales = afiliado.mesesActivos || 0;
+    let mesesTrabajados = 0;
     
-    // Si está activo o en reingreso, calcular desde la última fecha activa
-    if (afiliado.status === 'A' || afiliado.status === 'R') {
-        const fechaInicio = afiliado.fechaReingreso ? afiliado.fechaReingreso.toDate() : afiliado.fechaAlta.toDate();
-        const mesesActuales = calcularMesesDesde(fechaInicio);
-        mesesTotales += mesesActuales;
+    // Prioridad 1: Calcular desde fecha de ingreso a la empresa
+    if (afiliado.fechaIngresoEmpresa) {
+        const fechaIngreso = new Date(afiliado.fechaIngresoEmpresa);
+        mesesTrabajados = calcularMesesDesde(fechaIngreso);
+    } 
+    // Fallback: Si no hay fechaIngresoEmpresa, usar lógica antigua
+    else {
+        mesesTrabajados = afiliado.mesesActivos || 0;
+        
+        // Si está activo o en reingreso, calcular desde la última fecha activa
+        if (afiliado.status === 'A' || afiliado.status === 'R') {
+            const fechaInicio = afiliado.fechaReingreso ? afiliado.fechaReingreso.toDate() : afiliado.fechaAlta.toDate();
+            const mesesActuales = calcularMesesDesde(fechaInicio);
+            mesesTrabajados += mesesActuales;
+        }
     }
     
-    const años = Math.floor(mesesTotales / 12);
-    const meses = Math.round(mesesTotales % 12);
+    const años = Math.floor(mesesTrabajados / 12);
+    const meses = Math.round(mesesTrabajados % 12);
     
     if (años > 0) {
         return `${años} año${años > 1 ? 's' : ''} ${meses} mes${meses !== 1 ? 'es' : ''}`;
@@ -439,16 +464,16 @@ window.guardarEdicion = async function() {
 
             // Preparar datos actualizados
             const datosActualizados = {
-                nombreCompleto: nombreCompleto,
-                curp: curp,
-                lugarNacimiento: document.getElementById('editLugarNacimiento').value.trim(),
+                nombreCompleto: nombreCompleto.toUpperCase(),
+                curp: curp.toUpperCase(),
+                lugarNacimiento: document.getElementById('editLugarNacimiento').value.trim().toUpperCase(),
                 fechaNacimiento: document.getElementById('editFechaNacimiento').value,
-                domicilio: document.getElementById('editDomicilio').value.trim(),
+                domicilio: document.getElementById('editDomicilio').value.trim().toUpperCase(),
                 estadoCivil: document.getElementById('editEstadoCivil').value,
                 sexo: document.getElementById('editSexo').value,
                 telefono: telefono,
                 escolaridad: document.getElementById('editEscolaridad').value,
-                puesto: document.getElementById('editPuesto').value,
+                puesto: document.getElementById('editPuesto').value.toUpperCase(),
                 salarioDiario: parseFloat(document.getElementById('editSalarioDiario').value),
                 fechaIngresoEmpresa: document.getElementById('editFechaIngresoEmpresa').value
             };
@@ -639,7 +664,7 @@ window.verDetalles = function(id) {
                 </div>
             ` : ''}
             <div class="detail-item">
-                <div class="detail-label">Tiempo Activo Total</div>
+                <div class="detail-label">Tiempo Trabajando en la Empresa</div>
                 <div class="detail-value">${tiempoActivo}</div>
             </div>
             <div class="detail-item">
@@ -689,28 +714,37 @@ window.mostrarModalPlanta = function(id) {
     afiliadoSeleccionado = todosLosAfiliados.find(a => a.id === id);
     if (!afiliadoSeleccionado) return;
 
-    // Calcular meses totales
-    let mesesTotales = afiliadoSeleccionado.mesesActivos || 0;
-    if (afiliadoSeleccionado.status === 'A' || afiliadoSeleccionado.status === 'R') {
-        const fechaInicio = afiliadoSeleccionado.fechaReingreso ? 
-            afiliadoSeleccionado.fechaReingreso.toDate() : 
-            afiliadoSeleccionado.fechaAlta.toDate();
-        const mesesActuales = calcularMesesDesde(fechaInicio);
-        mesesTotales += mesesActuales;
+    // Calcular meses desde el ingreso a la empresa (NO desde afiliación)
+    let mesesTrabajados = 0;
+    
+    if (afiliadoSeleccionado.fechaIngresoEmpresa) {
+        // Usar fecha de ingreso a la empresa
+        const fechaIngreso = new Date(afiliadoSeleccionado.fechaIngresoEmpresa);
+        mesesTrabajados = calcularMesesDesde(fechaIngreso);
+    } else {
+        // Fallback: si no hay fechaIngresoEmpresa, usar fechaAlta
+        mesesTrabajados = afiliadoSeleccionado.mesesActivos || 0;
+        if (afiliadoSeleccionado.status === 'A' || afiliadoSeleccionado.status === 'R') {
+            const fechaInicio = afiliadoSeleccionado.fechaReingreso ? 
+                afiliadoSeleccionado.fechaReingreso.toDate() : 
+                afiliadoSeleccionado.fechaAlta.toDate();
+            const mesesActuales = calcularMesesDesde(fechaInicio);
+            mesesTrabajados += mesesActuales;
+        }
     }
 
-    const años = Math.floor(mesesTotales / 12);
-    const meses = Math.round(mesesTotales % 12);
-    const cumple24Meses = mesesTotales >= 24;
+    const años = Math.floor(mesesTrabajados / 12);
+    const meses = Math.round(mesesTrabajados % 12);
+    const cumple24Meses = mesesTrabajados >= 24;
 
     const mensaje = `
         ${cumple24Meses ? `
             <div class="alert-box alert-success">
-                <strong>✓ Este afiliado ya cumplió los 24 meses reglamentarios</strong>
+                <strong>✓ Este empleado ya cumplió los 24 meses reglamentarios</strong>
             </div>
         ` : `
             <div class="alert-box alert-warning">
-                <strong>⚠️ Este afiliado aún no cumple 24 meses</strong><br>
+                <strong>⚠️ Este empleado aún no cumple 24 meses trabajando en la empresa</strong><br>
                 Como administrador, puedes otorgar planta de manera anticipada si lo consideras necesario.
             </div>
         `}
@@ -721,15 +755,21 @@ window.mostrarModalPlanta = function(id) {
                 <div class="detail-value">${afiliadoSeleccionado.nombreCompleto}</div>
             </div>
             <div class="detail-item">
-                <div class="detail-label">Tiempo Total Acumulado</div>
+                <div class="detail-label">Tiempo Trabajando en la Empresa</div>
                 <div class="detail-value">${años} año${años !== 1 ? 's' : ''} ${meses} mes${meses !== 1 ? 'es' : ''}</div>
             </div>
+            ${afiliadoSeleccionado.fechaIngresoEmpresa ? `
+                <div class="detail-item">
+                    <div class="detail-label">Fecha de Ingreso a la Empresa</div>
+                    <div class="detail-value">${formatearFechaString(afiliadoSeleccionado.fechaIngresoEmpresa)}</div>
+                </div>
+            ` : ''}
             <div class="detail-item">
                 <div class="detail-label">Estado Actual</div>
                 <div class="detail-value"><span class="status-badge status-${afiliadoSeleccionado.status}">${getStatusTexto(afiliadoSeleccionado.status)}</span></div>
             </div>
             <div class="detail-item">
-                <div class="detail-label">Fecha de Alta Original</div>
+                <div class="detail-label">Fecha de Afiliación al Sindicato</div>
                 <div class="detail-value">${formatearFecha(afiliadoSeleccionado.fechaAlta.toDate())}</div>
             </div>
             ${afiliadoSeleccionado.fechaReingreso ? `
@@ -743,7 +783,7 @@ window.mostrarModalPlanta = function(id) {
         <div class="alert-box alert-info">
             <strong>¿Qué significa "PLANTA"?</strong><br>
             Al otorgar planta, el empleado pasa a tener un estatus permanente (Alta Planta - AP). 
-            Normalmente se otorga después de 24 meses de servicio activo, pero como administrador 
+            Normalmente se otorga después de 24 meses trabajando en la empresa, pero como administrador 
             puedes otorgarlo en cualquier momento por méritos especiales o decisión de la empresa.
         </div>
     `;
@@ -842,7 +882,7 @@ async function confirmarBaja() {
             await updateDoc(afiliadoRef, {
                 status: 'B',
                 fechaBaja: Timestamp.now(),
-                motivoBaja: motivo,
+                motivoBaja: motivo.toUpperCase(),
                 mesesActivos: nuevosTotalMeses
             });
 
@@ -1334,3 +1374,297 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
+
+
+// ======================
+// UTILIDADES DE ADMINISTRACIÓN
+// ======================
+
+// Abrir modal de utilidades
+document.getElementById('btnUtilidades')?.addEventListener('click', function() {
+    openModal('modalUtilidades');
+});
+
+// Convertir todos los registros a mayúsculas
+window.convertirTodoAMayusculas = async function() {
+    if (!confirm('¿Estás seguro de convertir TODOS los registros a mayúsculas?\n\nEsta operación:\n- Afectará TODOS los registros\n- Convertirá nombres, direcciones, puestos, etc.\n- NO se puede deshacer\n\n¿Continuar?')) {
+        return;
+    }
+
+    try {
+        showLoading();
+        const ingresosRef = collection(window.db, 'ingresos');
+        const querySnapshot = await getDocs(ingresosRef);
+        
+        let convertidos = 0;
+        let errores = 0;
+
+        for (const docSnap of querySnapshot.docs) {
+            try {
+                const data = docSnap.data();
+                const docRef = doc(window.db, 'ingresos', docSnap.id);
+                
+                const datosActualizados = {};
+                
+                // Convertir campos de texto a mayúsculas
+                if (data.nombreCompleto) datosActualizados.nombreCompleto = data.nombreCompleto.toUpperCase();
+                if (data.curp) datosActualizados.curp = data.curp.toUpperCase();
+                if (data.lugarNacimiento) datosActualizados.lugarNacimiento = data.lugarNacimiento.toUpperCase();
+                if (data.domicilio) datosActualizados.domicilio = data.domicilio.toUpperCase();
+                if (data.puesto) datosActualizados.puesto = data.puesto.toUpperCase();
+                if (data.motivoBaja) datosActualizados.motivoBaja = data.motivoBaja.toUpperCase();
+                if (data.motivoDespido) datosActualizados.motivoDespido = data.motivoDespido.toUpperCase();
+                
+                // Solo actualizar si hay campos para actualizar
+                if (Object.keys(datosActualizados).length > 0) {
+                    await updateDoc(docRef, datosActualizados);
+                    convertidos++;
+                }
+            } catch (error) {
+                console.error('Error al convertir registro:', docSnap.id, error);
+                errores++;
+            }
+        }
+
+        hideLoading();
+        closeModal('modalUtilidades');
+        
+        mostrarExito(`Conversión completada.\n\nRegistros convertidos: ${convertidos}\nErrores: ${errores}`);
+        
+        // Recargar datos
+        await cargarAfiliados();
+        
+    } catch (error) {
+        hideLoading();
+        console.error('Error en conversión:', error);
+        mostrarError('No se pudo completar la conversión. Por favor, intenta nuevamente.');
+    }
+};
+
+// Reportar duplicados (solo ver, no eliminar)
+window.reportarDuplicados = async function() {
+    try {
+        showLoading();
+        const ingresosRef = collection(window.db, 'ingresos');
+        const querySnapshot = await getDocs(ingresosRef);
+        
+        const curpMap = new Map();
+        
+        querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            const curp = data.curp ? data.curp.toUpperCase() : '';
+            
+            if (curp) {
+                if (!curpMap.has(curp)) {
+                    curpMap.set(curp, []);
+                }
+                curpMap.get(curp).push({
+                    id: doc.id,
+                    nombre: data.nombreCompleto,
+                    fechaAlta: data.fechaAlta
+                });
+            }
+        });
+        
+        // Encontrar duplicados
+        const duplicados = [];
+        curpMap.forEach((registros, curp) => {
+            if (registros.length > 1) {
+                duplicados.push({ curp, registros });
+            }
+        });
+        
+        hideLoading();
+        
+        if (duplicados.length === 0) {
+            mostrarExito('No se encontraron registros duplicados. La base de datos está limpia.');
+            return;
+        }
+        
+        // Mostrar reporte
+        let reporte = `Se encontraron ${duplicados.length} CURPs duplicados:\n\n`;
+        
+        duplicados.forEach((dup, index) => {
+            reporte += `${index + 1}. CURP: ${dup.curp}\n`;
+            dup.registros.forEach((reg, i) => {
+                const fecha = reg.fechaAlta ? formatearFecha(reg.fechaAlta.toDate()) : 'Sin fecha';
+                reporte += `   ${i + 1}) ${reg.nombre} - ${fecha}\n`;
+            });
+            reporte += '\n';
+        });
+        
+        alert(reporte);
+        
+    } catch (error) {
+        hideLoading();
+        console.error('Error al generar reporte:', error);
+        mostrarError('No se pudo generar el reporte.');
+    }
+};
+
+// Eliminar duplicados
+window.eliminarDuplicados = async function() {
+    if (!confirm('⚠️ ADVERTENCIA: Esta operación eliminará registros duplicados de forma PERMANENTE.\n\nSe mantendrá únicamente el registro MÁS RECIENTE de cada CURP.\n\n¿Estás seguro de continuar?')) {
+        return;
+    }
+
+    try {
+        showLoading();
+        const ingresosRef = collection(window.db, 'ingresos');
+        const querySnapshot = await getDocs(ingresosRef);
+        
+        const curpMap = new Map();
+        
+        querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            const curp = data.curp ? data.curp.toUpperCase() : '';
+            
+            if (curp) {
+                if (!curpMap.has(curp)) {
+                    curpMap.set(curp, []);
+                }
+                curpMap.get(curp).push({
+                    id: doc.id,
+                    nombre: data.nombreCompleto,
+                    fechaAlta: data.fechaAlta,
+                    data: data
+                });
+            }
+        });
+        
+        let eliminados = 0;
+        let errores = 0;
+        
+        // Procesar duplicados
+        for (const [curp, registros] of curpMap) {
+            if (registros.length > 1) {
+                // Ordenar por fecha (más reciente primero)
+                registros.sort((a, b) => {
+                    const fechaA = a.fechaAlta ? a.fechaAlta.toDate() : new Date(0);
+                    const fechaB = b.fechaAlta ? b.fechaAlta.toDate() : new Date(0);
+                    return fechaB - fechaA;
+                });
+                
+                // Mantener el primero (más reciente), eliminar el resto
+                for (let i = 1; i < registros.length; i++) {
+                    try {
+                        const docRef = doc(window.db, 'ingresos', registros[i].id);
+                        await deleteDoc(docRef);
+                        eliminados++;
+                    } catch (error) {
+                        console.error('Error al eliminar:', registros[i].id, error);
+                        errores++;
+                    }
+                }
+            }
+        }
+        
+        hideLoading();
+        closeModal('modalUtilidades');
+        
+        if (eliminados > 0) {
+            mostrarExito(`Limpieza completada.\n\nRegistros duplicados eliminados: ${eliminados}\nErrores: ${errores}`);
+            await cargarAfiliados();
+        } else {
+            mostrarExito('No se encontraron registros duplicados para eliminar.');
+        }
+        
+    } catch (error) {
+        hideLoading();
+        console.error('Error al eliminar duplicados:', error);
+        mostrarError('No se pudo completar la eliminación de duplicados.');
+    }
+};
+
+
+// Eliminar afiliado de la base de datos permanentemente
+window.eliminarDeBaseDatos = function(id, nombre, curp) {
+    // Crear modal de confirmación personalizado
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.style.display = 'block';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header" style="background: #e74c3c; color: white;">
+                <h2>⚠️ ELIMINAR DE BASE DE DATOS</h2>
+            </div>
+            <div class="modal-body">
+                <div class="alert-box" style="background: #fff3cd; border-color: #ffc107; color: #856404; margin-bottom: 20px;">
+                    <strong>ADVERTENCIA: Esta acción es IRREVERSIBLE</strong><br>
+                    El registro será eliminado permanentemente de la base de datos y NO podrá recuperarse.
+                </div>
+                
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                    <strong>Datos del registro a eliminar:</strong><br><br>
+                    <strong>Nombre:</strong> ${nombre}<br>
+                    <strong>CURP:</strong> ${curp}<br>
+                </div>
+
+                <div style="color: #e74c3c; font-weight: 600; margin: 20px 0;">
+                    ¿Estás ABSOLUTAMENTE SEGURO de eliminar este registro?
+                </div>
+
+                <div style="background: #ffe6e6; padding: 15px; border-radius: 8px; border-left: 4px solid #e74c3c; margin: 20px 0;">
+                    <strong>Razones válidas para eliminar:</strong>
+                    <ul style="margin: 10px 0; padding-left: 20px;">
+                        <li>Registro duplicado</li>
+                        <li>Datos completamente erróneos</li>
+                        <li>Persona que nunca perteneció a la empresa</li>
+                        <li>Solicitud de eliminación de datos personales</li>
+                    </ul>
+                </div>
+
+                <div style="color: #7f8c8d; font-size: 14px; margin-top: 20px;">
+                    <strong>Nota:</strong> Si solo necesitas dar de baja temporal a un empleado, usa el botón "Dar de Baja" en lugar de eliminar.
+                </div>
+
+                <div class="modal-buttons" style="margin-top: 30px;">
+                    <button class="btn-danger" id="btnConfirmarEliminar" style="background: #e74c3c;">
+                        SÍ, ELIMINAR PERMANENTEMENTE
+                    </button>
+                    <button class="btn-secondary" id="btnCancelarEliminar">
+                        NO, CANCELAR
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+
+    // Botón confirmar
+    document.getElementById('btnConfirmarEliminar').onclick = async () => {
+        modal.remove();
+        
+        try {
+            showLoading();
+            
+            // Eliminar de Firestore
+            const docRef = doc(window.db, 'ingresos', id);
+            await deleteDoc(docRef);
+            
+            hideLoading();
+            mostrarExito(`El registro de ${nombre} ha sido eliminado permanentemente de la base de datos.`);
+            
+            // Recargar lista
+            await cargarAfiliados();
+            
+        } catch (error) {
+            hideLoading();
+            console.error('Error al eliminar:', error);
+            mostrarError('No se pudo eliminar el registro. Por favor, intenta nuevamente.');
+        }
+    };
+
+    // Botón cancelar
+    document.getElementById('btnCancelarEliminar').onclick = () => {
+        modal.remove();
+    };
+
+    // Cerrar al hacer clic fuera del modal
+    modal.onclick = (e) => {
+        if (e.target === modal) {
+            modal.remove();
+        }
+    };
+};
