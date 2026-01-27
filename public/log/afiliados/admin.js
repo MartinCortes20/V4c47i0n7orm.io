@@ -185,6 +185,12 @@ function aplicarFiltros() {
                 return a.nombreCompleto.localeCompare(b.nombreCompleto);
             case 'nombre-desc':
                 return b.nombreCompleto.localeCompare(a.nombreCompleto);
+            case 'edad-desc':
+                // Mayor a menor edad
+                return calcularEdad(b.fechaNacimiento) - calcularEdad(a.fechaNacimiento);
+            case 'edad-asc':
+                // Menor a mayor edad
+                return calcularEdad(a.fechaNacimiento) - calcularEdad(b.fechaNacimiento);
             default:
                 // Por defecto: ordenar alfabéticamente por nombre (A-Z)
                 return a.nombreCompleto.localeCompare(b.nombreCompleto);
@@ -221,7 +227,7 @@ function mostrarAfiliados(afiliados) {
     document.getElementById('resultCount').textContent = `${afiliados.length} resultado${afiliados.length !== 1 ? 's' : ''}`;
 
     if (afiliados.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" class="empty-row">No se encontraron resultados</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="10" class="empty-row">No se encontraron resultados</td></tr>';
         return;
     }
 
@@ -229,6 +235,10 @@ function mostrarAfiliados(afiliados) {
         const tiempoActivo = calcularTiempoActivo(afiliado);
         const statusTexto = getStatusTexto(afiliado.status);
         const fotoSrc = afiliado.fotoBase64 || afiliado.fotoURL || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="50" height="50"%3E%3Crect fill="%23ddd" width="50" height="50"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%23999"%3E?%3C/text%3E%3C/svg%3E';
+        
+        // Calcular edad
+        const edad = calcularEdad(afiliado.fechaNacimiento);
+        const fechaNac = afiliado.fechaNacimiento ? formatearFechaString(afiliado.fechaNacimiento) : 'No especificada';
         
         // Verificar si puede reingresar (6 meses desde baja)
         let puedeReingresar = false;
@@ -247,6 +257,8 @@ function mostrarAfiliados(afiliados) {
                 <td><span class="status-badge status-${afiliado.status}">${statusTexto}</span></td>
                 <td>${afiliado.fechaIngresoEmpresa ? formatearFechaString(afiliado.fechaIngresoEmpresa) : 'No especificada'}</td>
                 <td>${tiempoActivo}</td>
+                <td>${edad} años</td>
+                <td>${fechaNac}</td>
                 <td>
                     <div class="action-buttons">
                         <button class="btn-small btn-info" onclick="verDetalles('${afiliado.id}')">Ver</button>
@@ -309,6 +321,23 @@ function calcularMesesDesde(fecha) {
     const diffTime = Math.abs(ahora - fecha);
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return diffDays / 30; // Aproximación
+}
+
+// Calcular edad a partir de fecha de nacimiento
+function calcularEdad(fechaNacimiento) {
+    if (!fechaNacimiento) return 0;
+    
+    const hoy = new Date();
+    const fecha = typeof fechaNacimiento === 'string' ? new Date(fechaNacimiento) : fechaNacimiento;
+    
+    let edad = hoy.getFullYear() - fecha.getFullYear();
+    const mes = hoy.getMonth() - fecha.getMonth();
+    
+    if (mes < 0 || (mes === 0 && hoy.getDate() < fecha.getDate())) {
+        edad--;
+    }
+    
+    return edad;
 }
 
 // Verificar si puede reingresar

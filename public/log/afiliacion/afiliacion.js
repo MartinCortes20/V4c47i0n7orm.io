@@ -10,6 +10,12 @@ document.getElementById('diaActual').textContent = hoy.getDate();
 document.getElementById('mesActual').textContent = meses[hoy.getMonth()];
 document.getElementById('anioActual').textContent = hoy.getFullYear();
 
+// Configurar fecha máxima para nacimiento (18 años mínimo)
+const fechaNacimientoInput = document.getElementById('fechaNacimiento');
+const fechaMaxima = new Date();
+fechaMaxima.setFullYear(fechaMaxima.getFullYear() - 18);
+fechaNacimientoInput.max = fechaMaxima.toISOString().split('T')[0];
+
 // Preview de la foto
 const inputFoto = document.getElementById('foto');
 const previewFoto = document.getElementById('previewFoto');
@@ -63,6 +69,10 @@ document.getElementById('btnLimpiar').addEventListener('click', () => {
         document.getElementById('formAfiliacion').reset();
         previewFoto.innerHTML = '';
         document.getElementById('nombreFirma').textContent = '';
+        // Restablecer fecha máxima para nacimiento
+        const fechaMaxima = new Date();
+        fechaMaxima.setFullYear(fechaMaxima.getFullYear() - 18);
+        fechaNacimientoInput.max = fechaMaxima.toISOString().split('T')[0];
     }
 });
 
@@ -351,17 +361,21 @@ function validarCURPCompleto(curp) {
     return { valido: true };
 }
 
+// Función para convertir automáticamente a mayúsculas manteniendo la posición del cursor
+function convertirAMayusculas(event) {
+    const input = event.target;
+    const cursorPos = input.selectionStart;
+    input.value = input.value.toUpperCase();
+    input.setSelectionRange(cursorPos, cursorPos);
+}
+
 // Convertir automáticamente a mayúsculas en tiempo real (SOLO INPUTS DE TEXTO)
-const camposMayusculas = ['nombres', 'apellidoPaterno', 'apellidoMaterno', 'lugarNacimiento', 'domicilio'];
+const camposMayusculas = ['nombres', 'apellidoPaterno', 'apellidoMaterno', 'lugarNacimiento', 'domicilio', 'curp'];
 
 camposMayusculas.forEach(campoId => {
     const elemento = document.getElementById(campoId);
     if (elemento) {
-        elemento.addEventListener('input', (e) => {
-            const cursorPos = e.target.selectionStart;
-            e.target.value = e.target.value.toUpperCase();
-            e.target.setSelectionRange(cursorPos, cursorPos);
-        });
+        elemento.addEventListener('input', convertirAMayusculas);
     }
 });
 
@@ -405,6 +419,17 @@ document.getElementById('curp').addEventListener('input', (e) => {
 // Envío del formulario
 document.getElementById('formAfiliacion').addEventListener('submit', async (e) => {
     e.preventDefault();
+
+    // Validar fecha de nacimiento (mínimo 18 años)
+    const fechaNacimiento = new Date(document.getElementById('fechaNacimiento').value);
+    const hoy = new Date();
+    const edadMinima = new Date();
+    edadMinima.setFullYear(hoy.getFullYear() - 18);
+    
+    if (fechaNacimiento > edadMinima) {
+        showErrorModal('Debes tener al menos 18 años de edad para afiliarte al sindicato.');
+        return;
+    }
 
     // Validaciones adicionales
     const curp = document.getElementById('curp').value.toUpperCase();
@@ -468,7 +493,7 @@ document.getElementById('formAfiliacion').addEventListener('submit', async (e) =
         const resizedPhoto = await resizeImage(foto);
         const photoBase64 = await convertToBase64(resizedPhoto);
 
-        // Concatenar nombre completo desde los 3 campos separados
+        // Concatenar nombre completo desde los 3 campos separados (TODO en mayúsculas)
         const nombres = document.getElementById('nombres').value.trim().toUpperCase();
         const apellidoPaterno = document.getElementById('apellidoPaterno').value.trim().toUpperCase();
         const apellidoMaterno = document.getElementById('apellidoMaterno').value.trim().toUpperCase();
@@ -477,7 +502,7 @@ document.getElementById('formAfiliacion').addEventListener('submit', async (e) =
         // Obtener valor del select de puesto (ya viene en el formato correcto del HTML)
         const puestoSeleccionado = document.getElementById('puesto').value;
 
-        // Preparar datos para guardar
+        // Preparar datos para guardar (TODO en mayúsculas donde corresponda)
         const datosAfiliacion = {
             // Datos personales (TODO EN MAYÚSCULAS)
             nombreCompleto: nombreCompleto,

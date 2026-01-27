@@ -91,7 +91,10 @@
                         </div>
                         <div>
                             <label>Fecha de nacimiento: <span class="required">*</span></label>
-                            <input type="date" id="fechaNacimiento" name="fechaNacimiento" required>
+                            <input type="date" id="fechaNacimiento" name="fechaNacimiento" 
+                                   max="" 
+                                   onfocus="this.max=new Date(new Date().getFullYear()-18, new Date().getMonth(), new Date().getDate()).toISOString().split('T')[0]"
+                                   required>
                         </div>
                     </div>
 
@@ -141,7 +144,7 @@
                         </div>
                         <div>
                             <label>CURP: <span class="required">*</span></label>
-                            <input type="text" id="curp" name="curp" placeholder="18 caracteres" minlength="18" maxlength="18" style="text-transform: uppercase;" required>
+                            <input type="text" id="curp" name="curp" placeholder="18 caracteres" minlength="18" maxlength="18" required>
                         </div>
                     </div>
 
