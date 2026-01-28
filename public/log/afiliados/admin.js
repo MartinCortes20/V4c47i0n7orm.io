@@ -261,19 +261,19 @@ function mostrarAfiliados(afiliados) {
                 <td>${fechaNac}</td>
                 <td>
                     <div class="action-buttons">
-                        <button class="btn-small btn-info" onclick="verDetalles('${afiliado.id}')">Ver</button>
-                        <button class="btn-small btn-edit" onclick="editarAfiliado('${afiliado.id}')">Editar</button>
+                        <button class="btn-small btn-info" onclick="verDetalles('${afiliado.id}')">👁️‍🗨️</button>
+                        <button class="btn-small btn-edit" onclick="editarAfiliado('${afiliado.id}')">✍🏼</button>
                         ${afiliado.status === 'A' || afiliado.status === 'R' ? 
-                            `<button class="btn-small btn-baja" onclick="mostrarModalBaja('${afiliado.id}')">Dar de Baja</button>` 
+                            `<button class="btn-small btn-baja" onclick="mostrarModalBaja('${afiliado.id}')">⤵️</button>` 
                             : ''}
                         ${afiliado.status === 'B' ? 
                             puedeReingresar ? 
-                                `<button class="btn-small btn-reingreso" onclick="mostrarModalReingreso('${afiliado.id}')">Reingresar</button>` 
+                                `<button class="btn-small btn-reingreso" onclick="mostrarModalReingreso('${afiliado.id}')">🔁</button>` 
                                 : 
-                                `<button class="btn-small btn-reingreso-disabled" onclick="mostrarMensajeNoReingresar('${afiliado.id}', ${mesesDesdeInhabilitacion.toFixed(1)})">Reingresar</button>`
+                                `<button class="btn-small btn-reingreso-disabled" onclick="mostrarMensajeNoReingresar('${afiliado.id}', ${mesesDesdeInhabilitacion.toFixed(1)})">🔁</button>`
                             : ''}
                         ${(afiliado.status === 'A' || afiliado.status === 'R') && afiliado.status !== 'AP' ? 
-                            `<button class="btn-small btn-planta" onclick="mostrarModalPlanta('${afiliado.id}')">Otorgar Planta</button>` 
+                            `<button class="btn-small btn-planta" onclick="mostrarModalPlanta('${afiliado.id}')">🎖️</button>` 
                             : ''}
                         <button class="btn-small btn-delete" onclick="eliminarDeBaseDatos('${afiliado.id}', '${afiliado.nombreCompleto}', '${afiliado.curp}')" title="Eliminar permanentemente">
                             🗑️
